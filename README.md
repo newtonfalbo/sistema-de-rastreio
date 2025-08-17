@@ -2,8 +2,6 @@
 
 ![Status do projeto](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)  
 
-Uma aplicação simples para rastreamento e gerenciamento de objetos/encomendas. Permite consultar status, histórico de movimentação e fornecer notificações futuras de atualização de status.
-
 ## ​ Descrição
 
 Sistema de Rastreio é uma aplicação desenvolvida para auxiliar no monitoramento e localização de pessoas em situações de risco ou vulnerabilidade.
