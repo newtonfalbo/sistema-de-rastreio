@@ -51,15 +51,15 @@ Com o **Sistema de Rastreio**, é possível **centralizar informações** e forn
 
 ```text
 sistema-de-rastreio/
-├── src/
-│   ├── manage.py        # Comando principal do Django
-│   ├── rastreio/        # App principal
-│   │   ├── models.py    # Modelos de dados
-│   │   ├── views.py     # Lógica das rotas
-│   │   ├── urls.py      # Rotas/endpoints
-│   │   └── serializers.py # DRF serializers
-├── tests/               # Testes automatizados
-├── requirements.txt     # Dependências do Python
-├── Dockerfile           # Configuração para containerização
-├── README.md            # Documentação
-└── LICENSE              # Licença
+├── sistema-de-rastreio/   # Pasta de configuração principal do Django
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── manage.py              # Ponto de entrada do projeto
+├── requirements.txt       # Dependências do projeto
+├── Dockerfile             # Configuração para containerização (opcional)
+├── README.md              # Documentação
+└── LICENSE                # Licença
+
