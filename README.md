@@ -62,4 +62,3 @@ sistema-de-rastreio/
 ├── Dockerfile             # Configuração para containerização (opcional)
 ├── README.md              # Documentação
 └── LICENSE                # Licença
-
