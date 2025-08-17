@@ -1,66 +1,65 @@
-# Sistema de Rastreio
+# 📍 Sistema de Rastreio
 
-![Status do projeto](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)  
+![Status do projeto](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
-## ​ Descrição
+O **Sistema de Rastreio** é uma aplicação desenvolvida para auxiliar no monitoramento e localização de pessoas em situações de risco ou vulnerabilidade.  
+O objetivo é oferecer uma ferramenta acessível e prática para ajudar a encontrar pessoas que estejam **desaparecidas**, **perdidas** ou **precisem de ajuda urgente**.
 
-Sistema de Rastreio é uma aplicação desenvolvida para auxiliar no monitoramento e localização de pessoas em situações de risco ou vulnerabilidade.
-A plataforma tem como objetivo oferecer um recurso acessível para:
+---
 
-Rastrear pessoas que estejam desaparecidas ou perdidas;
+## 📖 Descrição  
 
-Auxiliar equipes de resgate em ambientes urbanos ou de difícil acesso;
+A plataforma permite que usuários cadastrem pessoas para rastreamento, consultem sua localização atual e visualizem o histórico de deslocamentos.  
+Ela pode ser utilizada tanto por **usuários comuns** (familiares de crianças, idosos, etc.) quanto por **equipes de resgate e órgãos de segurança pública**.  
 
-Acompanhar a movimentação de pessoas em situação de emergência;
+### 🎯 Público-alvo  
+- Familiares que desejam acompanhar pessoas queridas em tempo real.  
+- Órgãos de segurança e equipes de resgate.  
+- Instituições de apoio a pessoas desaparecidas.  
 
-Fornecer informações rápidas e centralizadas sobre localização e histórico de deslocamento.
+### 🚑 Problema que resolve  
+Hoje, encontrar pessoas desaparecidas depende de informações fragmentadas e processos demorados.  
+Com o **Sistema de Rastreio**, é possível **centralizar informações** e fornecer mais agilidade na busca de pessoas em situação de risco.  
 
-🎯 Público-alvo
+---
 
-Usuários comuns que desejam acompanhar pessoas queridas em tempo real (ex: crianças, idosos, familiares em viagens);
+## ⚙️ Funcionalidades  
 
-Órgãos de segurança pública e equipes de resgate;
+- 👤 Registrar pessoas para rastreamento (dados básicos de identificação).  
+- 📍 Consultar localização atual em tempo real.  
+- 🕓 Visualizar histórico de deslocamento (datas, horários e locais anteriores).  
+- 🔔 Receber notificações automáticas sobre movimentações ou alterações de status.  
+- 🌐 API REST para integração com outros sistemas de resgate ou monitoramento.  
 
-Instituições de apoio a pessoas desaparecidas.
+---
 
-🚑 Problema que resolve
+## 🛠️ Tecnologias  
 
-Atualmente, encontrar uma pessoa desaparecida ou perdida depende de informações fragmentadas e processos demorados.
-Com o Sistema de Rastreio, é possível centralizar informações, registrar movimentações e oferecer mais agilidade na busca por pessoas que necessitam de ajuda.
+- **Linguagem principal**: Python 🐍  
+- **Framework/backend**: Django 🌐  
+- **Banco de dados**: SQLite 💾  
+- **Bibliotecas/APIs externas**:  
+  - Django REST Framework (DRF) → criação de APIs REST.  
+  - Requests → consumo de APIs externas.  
+  - Geopy → manipulação de dados de localização (endereços, coordenadas).  
+- **Testes**: pytest ✅  
+- **Infra/Deploy**: Docker 🐳  
 
-##  Funcionalidades
+---
 
-•	Registrar pessoas para rastreamento (com informações básicas de identificação);
-
-•	Consultar localização atual em tempo real;
-
-•	Visualizar histórico de deslocamento (datas, horários e locais anteriores);
-
-•	Receber notificações automáticas (por e-mail ou interface) em caso de movimentações suspeitas ou mudanças de status;
-
-•	Disponibilizar API REST para integração com outros sistemas de resgate ou monitoramento.
-
-##  Tecnologias
-
-- Linguagem principal: Python
-- Framework/backend: Django
-- Banco de dados: SQLite
-- Bibliotecas/parsers/APIs externas:
-- Testes: pytest, unittest
-- Infra/Deploy (opcional): Docker
-
-##  Estrutura do Projeto
+## 📂 Estrutura do Projeto  
 
 ```text
 sistema-de-rastreio/
 ├── src/
-│   ├── main.py          # Ponto de entrada (ex: servidor)
-│   ├── controllers/     # Rotas ou endpoints
-│   ├── models/          # Modelos de dados
-│   ├── services/        # Lógica de rastreio e integração
-│   └── utils/           # Funções helpers
+│   ├── manage.py        # Comando principal do Django
+│   ├── rastreio/        # App principal
+│   │   ├── models.py    # Modelos de dados
+│   │   ├── views.py     # Lógica das rotas
+│   │   ├── urls.py      # Rotas/endpoints
+│   │   └── serializers.py # DRF serializers
 ├── tests/               # Testes automatizados
 ├── requirements.txt     # Dependências do Python
-├── Dockerfile           # Se aplicável
-├── README.md            # Este arquivo
-└── LICENSE              # Licença do projeto (ex: MIT)
+├── Dockerfile           # Configuração para containerização
+├── README.md            # Documentação
+└── LICENSE              # Licença
