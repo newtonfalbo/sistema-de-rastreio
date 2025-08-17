@@ -8,8 +8,8 @@ Uma aplicação simples para rastreamento e gerenciamento de objetos/encomendas.
 ## ​ Descrição
 
 Explique brevemente:
-- O propósito do sistema.
-- O público-alvo (usuários finais, equipes de logística, etc.).
+- O propó.
+- O público-alvo: usuários finais.
 - Problemas que resolve (ex: acompanhar entregas de forma centralizada).
 
 ##  Funcionalidades
@@ -22,12 +22,12 @@ Explique brevemente:
 
 ##  Tecnologias
 
-- Linguagem principal: Python *(ou a que você estiver usando)*
-- Framework/backend: Flask, Django, FastAPI, etc.
-- Banco de dados: SQLite, PostgreSQL, MongoDB, etc.
-- Bibliotecas/parsers/APIs externas: ex: biblioteca de rastreio de transportadoras ou Correios
+- Linguagem principal: Python
+- Framework/backend: Django
+- Banco de dados: SQLite
+- Bibliotecas/parsers/APIs externas:
 - Testes: pytest, unittest
-- Infra/Deploy (opcional): Docker, GitHub Actions, Heroku, AWS, etc.
+- Infra/Deploy (opcional): Docker
 
 ##  Estrutura do Projeto
 
