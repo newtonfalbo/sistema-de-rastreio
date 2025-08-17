@@ -1,7 +1,6 @@
 # Sistema de Rastreio
 
 ![Status do projeto](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)  
-*(Opcional: badges de cobertura de testes, linguagem, license, etc.)*
 
 Uma aplicação simples para rastreamento e gerenciamento de objetos/encomendas. Permite consultar status, histórico de movimentação e fornecer notificações futuras de atualização de status.
 
