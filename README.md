@@ -30,11 +30,15 @@ Com o Sistema de Rastreio, é possível centralizar informações, registrar mov
 
 ##  Funcionalidades
 
-- Registrar objetos ou códigos de rastreio
-- Consultar status e localização atual
-- Visualizar histórico de eventos (datas, localizações anteriores)
-- Notificações (por e-mail ou interface) de mudanças de status *(se aplicável)*
-- API REST (se existir backend exposto)
+•	Registrar pessoas para rastreamento (com informações básicas de identificação);
+
+•	Consultar localização atual em tempo real;
+
+•	Visualizar histórico de deslocamento (datas, horários e locais anteriores);
+
+•	Receber notificações automáticas (por e-mail ou interface) em caso de movimentações suspeitas ou mudanças de status;
+
+•	Disponibilizar API REST para integração com outros sistemas de resgate ou monitoramento.
 
 ##  Tecnologias
 
