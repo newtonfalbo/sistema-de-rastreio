@@ -7,10 +7,29 @@ Uma aplicação simples para rastreamento e gerenciamento de objetos/encomendas.
 
 ## ​ Descrição
 
-Explique brevemente:
-- O propó.
-- O público-alvo: usuários finais.
-- Problemas que resolve (ex: acompanhar entregas de forma centralizada).
+Sistema de Rastreio é uma aplicação desenvolvida para auxiliar no monitoramento e localização de pessoas em situações de risco ou vulnerabilidade.
+A plataforma tem como objetivo oferecer um recurso acessível para:
+
+Rastrear pessoas que estejam desaparecidas ou perdidas;
+
+Auxiliar equipes de resgate em ambientes urbanos ou de difícil acesso;
+
+Acompanhar a movimentação de pessoas em situação de emergência;
+
+Fornecer informações rápidas e centralizadas sobre localização e histórico de deslocamento.
+
+🎯 Público-alvo
+
+Usuários comuns que desejam acompanhar pessoas queridas em tempo real (ex: crianças, idosos, familiares em viagens);
+
+Órgãos de segurança pública e equipes de resgate;
+
+Instituições de apoio a pessoas desaparecidas.
+
+🚑 Problema que resolve
+
+Atualmente, encontrar uma pessoa desaparecida ou perdida depende de informações fragmentadas e processos demorados.
+Com o Sistema de Rastreio, é possível centralizar informações, registrar movimentações e oferecer mais agilidade na busca por pessoas que necessitam de ajuda.
 
 ##  Funcionalidades
 
