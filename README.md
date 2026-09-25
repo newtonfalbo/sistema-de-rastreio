@@ -150,7 +150,7 @@ O celular abre `/celular/`, confirma pessoa e dispositivo, autoriza e envia uma 
 
 O QR Code é gerado localmente. O banco armazena apenas o hash do segredo do link. O segredo vai no fragmento da URL e no corpo das requisições POST, nunca como parâmetro de consulta. Compartilhe o link somente com a pessoa correta: quem o possui pode enviar uma posição para esse dispositivo, durante sua validade.
 
-**Estado desta entrega:** implementação e testes locais concluídos; ativação do túnel externo Cloudflare depende de autorização específica do usuário. Nenhum endereço HTTPS público foi ativado nesta etapa. Não envie `127.0.0.1` ao celular.
+**Estado desta entrega:** túnel temporário Cloudflare autorizado pelo usuário e ativado para teste. Página móvel e JavaScript verificados por HTTPS; administração, login e API de consulta retornaram 404 no receptor externo. O endereço corrente fica somente em `.local/mobile-origin.txt`. Não envie `127.0.0.1` ao celular. Para encerrar o receptor e o túnel, execute `./scripts/parar-teste-celular.ps1`; o painel local permanece ligado.
 
 O receptor usa `scripts/servidor-celular.py`, Waitress em `127.0.0.1:8001` e rotas isoladas em `config/mobile_root_urls.py`. Ele lê o endereço HTTPS de `.local/mobile-origin.txt`. Esse arquivo só deve ser preenchido após ativar o túnel aprovado. O painel permanece em `127.0.0.1:8000`. O receptor não publica `/admin/`, `/api/`, `/entrar/` nem cadastros. A Cloudflare intermediará os dados transmitidos se o túnel for autorizado; isso é um ambiente temporário de teste, não implantação definitiva.
 
@@ -167,3 +167,7 @@ Para desbloqueio administrativo local, consulte `manage.py axes_reset --help`. P
 Respostas dinâmicas recebem `no-store`. Cookies de sessão são HttpOnly, têm duração máxima de oito horas sem renovação por atividade e expiram ao fechar o navegador (a restauração de sessão do navegador pode preservar cookies). Câmera e microfone ficam desabilitados pela política de permissões; geolocalização é limitada à própria origem. Produção exige segredo forte e lista explícita de hosts.
 
 Relatório: [conexão do celular e segurança](docs/REVISAO-CELULAR-SEGURANCA.md).
+
+## Privacidade e uso permitido
+
+O projeto está em validação, sem declaração de conformidade jurídica integral. Os testes desta fase devem usar dados fictícios ou os próprios dados de adultos que participem voluntariamente. Não utilizar para rastreamento oculto. Antes de uso com terceiros, cumprir os requisitos documentados em [Privacidade e LGPD](docs/PRIVACIDADE-LGPD.md), com revisão jurídica adequada ao caso.

@@ -1,4 +1,4 @@
-﻿# Conexão temporária do celular e segurança
+# Conexão temporária do celular e segurança
 
 ## O que foi entregue
 
@@ -13,9 +13,11 @@
 
 ## Estado da disponibilização externa
 
-A revisão automática rejeitou a abertura do túnel porque a publicação de um receptor de localização precisa pela Cloudflare requer autorização específica do usuário. O túnel **não foi aberto**. A geração dos links no painel permanece desabilitada enquanto não houver endereço HTTPS configurado.
+Após solicitação específica, o usuário autorizou expressamente o teste pela Cloudflare. O túnel temporário e o receptor foram ativados. O endereço fica somente em `.local/mobile-origin.txt`, fora do Git.
 
-O usuário deverá aprovar que a Cloudflare intermedie a conexão HTTPS e os dados de localização enviados voluntariamente pelo celular. A autorização pendente refere-se à exposição externa do receptor, não à implementação local já concluída. O endereço será temporário e funcionará enquanto computador, receptor e túnel permanecerem ligados.
+Validação externa: `/celular/` e `/celular/assets/celular.js` responderam HTTP 200; `/admin/`, `/api/pessoas/` e `/entrar/` responderam HTTP 404. A geração de links foi habilitada no painel. Nenhuma localização física foi coletada na ativação.
+
+O computador, receptor e túnel precisam continuar ligados. `scripts/parar-teste-celular.ps1` encerra os processos registrados após conferir executável e argumentos, mantendo o painel local. Reiniciar o túnel pode alterar o endereço e exigir novos links.
 
 ## Segurança e inicialização concluídas nesta rodada
 
@@ -48,7 +50,7 @@ Scripts e tarefas do VS Code foram adicionados para inicialização e criação 
 - Receptor testado quanto à ausência de rotas de painel, API de consulta e administrador.
 - Verificados CSRF, origem indevida, uso único, revogação, expiração, ausência de consentimento, envio de coordenadas inválidas e tentativas de alterar o dispositivo do vínculo.
 
-A câmera/GPS de um celular real e a conexão HTTPS externa **ainda não foram testados**. Os testes automatizados usam posições simuladas e banco temporário. Não houve coleta de localização física nesta implementação.
+A conexão HTTPS externa foi validada após autorização. A câmera/GPS de um celular real **ainda não foi testada**. Os testes automatizados usam posições simuladas e banco temporário. Não houve coleta de localização física nesta implementação.
 
 ## Proteção dos arquivos enviados ao GitHub
 
@@ -58,7 +60,7 @@ A pasta do projeto está no OneDrive: excluir do Git não impede sincronização
 
 ## Limitações e próximos testes
 
-1. Aprovar e ativar o túnel Cloudflare, gerar o QR Code no painel e abrir no celular.
+1. Gerar o QR Code no painel e abrir no celular com o túnel autorizado e ativo.
 2. Conferir pessoa e dispositivo antes de autorizar; enviar uma posição; atualizar o painel local.
 3. Reabrir o mesmo link e confirmar recusa por uso anterior; gerar outro e testar revogação.
 4. Validar permissões reais de GPS, ausência de sinal e precisão em aparelhos diferentes.
@@ -68,3 +70,5 @@ A pasta do projeto está no OneDrive: excluir do Git não impede sincronização
 8. Antes de uso permanente: infraestrutura HTTPS definitiva, proteção contra abuso na borda, backups, política de retenção e credenciais próprias por dispositivo.
 
 Referências técnicas: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/ ; https://docs.pylonsproject.org/projects/waitress/en/stable/usage.html ; https://django-axes.readthedocs.io/en/stable/2_installation.html .
+
+Os requisitos para uso lícito e tratamento de dados estão em [Privacidade e LGPD](PRIVACIDADE-LGPD.md). Autorizar o túnel não substitui definir a base legal do tratamento nem regularizar o uso de fornecedores externos.
