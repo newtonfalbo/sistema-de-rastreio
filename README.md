@@ -1,64 +1,122 @@
-# 📍 Sistema de Rastreio
+# Sistema de Rastreio
 
-![Status do projeto](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+Backend para cadastrar pessoas e dispositivos, receber coordenadas e consultar o histórico de localização. Esta primeira versão entrega uma API REST autenticada e o painel administrativo do Django.
 
-O **Sistema de Rastreio** é uma aplicação desenvolvida para auxiliar no monitoramento e localização de pessoas em situações de risco ou vulnerabilidade.  
-O objetivo é oferecer uma ferramenta acessível e prática para ajudar a encontrar pessoas que estejam **desaparecidas**, **perdidas** ou **precisem de ajuda urgente**.
+**Não localiza celulares por número, IMEI ou número de série.** Um aplicativo ou dispositivo autorizado precisa obter a localização e enviá-la à API. Mapa, aplicativo móvel, coleta em segundo plano e alertas ainda não estão implementados.
 
----
+## Executar no Windows / VS Code
 
-## 📖 Descrição  
+Requer Python 3.12 ou 3.13. Execute os comandos na raiz do repositório:
 
-A plataforma permite que usuários cadastrem pessoas para rastreamento, consultem sua localização atual e visualizem o histórico de deslocamentos.  
-Ela pode ser utilizada tanto por **usuários comuns** (familiares de crianças, idosos, etc.) quanto por **equipes de resgate e órgãos de segurança pública**.  
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.lock
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py createsuperuser
+.\.venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
+```
 
-### 🎯 Público-alvo  
-- Familiares que desejam acompanhar pessoas queridas em tempo real.  
-- Órgãos de segurança e equipes de resgate.  
-- Instituições de apoio a pessoas desaparecidas.  
+Nesta cópia local o ambiente `.venv` já foi preparado. Se `python` não estiver no PATH, utilize diretamente `.\.venv\Scripts\python.exe` nos comandos seguintes. O ambiente virtual depende do Python usado em sua criação; em outro computador, crie-o novamente com uma instalação própria do Python.
 
-### 🚑 Problema que resolve  
-Hoje, encontrar pessoas desaparecidas depende de informações fragmentadas e processos demorados.  
-Com o **Sistema de Rastreio**, é possível **centralizar informações** e fornecer mais agilidade na busca de pessoas em situação de risco.  
+- API navegável: http://127.0.0.1:8000/api/
+- Login de sessão: http://127.0.0.1:8000/api-auth/login/
+- Administração: http://127.0.0.1:8000/admin/
 
----
+No VS Code, instale as extensões Python e Python Debugger recomendadas pelo projeto. O interpretador está configurado para `.venv`. Use F5 e a configuração **Django: servidor local**. Não há senha padrão nem usuários criados automaticamente.
 
-## ⚙️ Funcionalidades  
+## Primeiro fluxo
 
-- 👤 Registrar pessoas para rastreamento (dados básicos de identificação).  
-- 📍 Consultar localização atual em tempo real.  
-- 🕓 Visualizar histórico de deslocamento (datas, horários e locais anteriores).  
-- 🔔 Receber notificações automáticas sobre movimentações ou alterações de status.  
-- 🌐 API REST para integração com outros sistemas de resgate ou monitoramento.  
+1. Crie o superusuário pelo comando acima e entre no painel administrativo.
+2. Crie um usuário comum em **Usuários**, sem marcar equipe ou superusuário.
+3. Saia do administrador e entre na API com o usuário comum pelo login de sessão.
+4. Em `/api/pessoas/`, cadastre uma pessoa. O responsável é o usuário autenticado.
+5. Habilite `compartilhamento_ativo` apenas para o compartilhamento autorizado; o padrão é `false`.
+6. Em `/api/dispositivos/`, cadastre um dispositivo usando o UUID da pessoa.
+7. Envie uma localização em `/api/localizacoes/` e consulte o histórico e a última posição.
 
----
+O painel administrativo tem acesso global e os dados de rastreamento são exclusivos de superusuários. A API limita todos os usuários, inclusive superusuários, aos seus próprios cadastros. Um responsável pode cadastrar várias pessoas, e cada pessoa pode ter vários dispositivos.
 
-## 🛠️ Tecnologias  
+## Autenticação de integrações
 
-- **Linguagem principal**: Python 🐍  
-- **Framework/backend**: Django 🌐  
-- **Banco de dados**: SQLite 💾  
-- **Bibliotecas/APIs externas**:  
-  - Django REST Framework (DRF) → criação de APIs REST.  
-  - Requests → consumo de APIs externas.  
-  - Geopy → manipulação de dados de localização (endereços, coordenadas).  
-- **Testes**: pytest ✅  
-- **Infra/Deploy**: Docker 🐳  
+Crie um token para um usuário existente no terminal local:
 
----
+```powershell
+.\.venv\Scripts\python.exe manage.py drf_create_token NOME_DO_USUARIO
+```
 
-## 📂 Estrutura do Projeto  
+Envie o cabeçalho `Authorization: Token SEU_TOKEN` nas chamadas da API. O token dá acesso aos dados do responsável, não é uma credencial limitada a um dispositivo. Não o inclua no repositório ou em aplicativos distribuídos. Para renovar/revogar o token anterior, use `drf_create_token -r NOME_DO_USUARIO`. Tokens não expiram automaticamente nesta versão. Use HTTPS fora do ambiente local.
 
-```text
-sistema-de-rastreio/
-├── sistema-de-rastreio/   # Pasta de configuração principal do Django
-│   ├── __init__.py
-│   ├── asgi.py
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── manage.py              # Ponto de entrada do projeto
-├── requirements.txt       # Dependências do projeto
-├── Dockerfile             # Configuração para containerização (opcional)
-├── README.md              # Documentação
-└── LICENSE                # Licença
+Para uso pelo navegador, a sessão exige CSRF nas operações de escrita; os formulários da API navegável já tratam isso. Não existe cadastro público nem endpoint público de emissão de tokens.
+
+## Endpoints
+
+| Método | Caminho | Função |
+| --- | --- | --- |
+| GET, POST | `/api/pessoas/` | Listar e cadastrar pessoas |
+| GET, PUT, PATCH, DELETE | `/api/pessoas/{id}/` | Consultar, alterar ou excluir uma pessoa |
+| GET | `/api/pessoas/{id}/ultima-localizacao/` | Última posição conhecida por data de captura |
+| GET, POST | `/api/dispositivos/` | Listar e cadastrar dispositivos |
+| GET, PUT, PATCH, DELETE | `/api/dispositivos/{id}/` | Consultar, alterar ou excluir dispositivo |
+| GET, POST | `/api/localizacoes/` | Consultar histórico ou registrar coordenadas |
+| GET | `/api/localizacoes/{id}/` | Consultar uma localização |
+
+Listas paginadas retornam `count`, `next`, `previous` e `results`, com 50 itens por página. O histórico aceita `pessoa`, `dispositivo`, `inicio` e `fim` como parâmetros. IDs são UUIDs, e datas usam ISO 8601; envie o fuso explicitamente (por exemplo `2026-09-25T14:00:00-03:00`). Os limites de período são inclusivos. A ordenação usa a data de captura, e não a ordem de chegada.
+
+Exemplo de corpo JSON para uma localização (substitua o UUID e a data):
+
+```json
+{
+  "dispositivo": "UUID_DO_DISPOSITIVO",
+  "latitude": "-3.7319000",
+  "longitude": "-38.5267000",
+  "precisao_metros": 12.0,
+  "capturado_em": "2026-09-25T14:00:00-03:00"
+}
+```
+
+Latitude aceita -90 a 90 e longitude -180 a 180, com até sete casas decimais. A precisão é opcional e não negativa. Capturas mais de cinco minutos no futuro são rejeitadas. O servidor registra `recebido_em` separadamente.
+
+Desativar o dispositivo ou o compartilhamento da pessoa bloqueia novas posições; o histórico já armazenado continua acessível ao responsável. A última posição pode ser antiga: sempre confira `capturado_em`. O indicador de compartilhamento é um controle operacional, não um registro completo de consentimento.
+
+**Exclusão:** apagar uma pessoa remove seus dispositivos e suas localizações; apagar um dispositivo remove seu histórico. Não há lixeira. Registros individuais de localização não podem ser alterados ou apagados pela API. Dispositivos não podem ser transferidos entre pessoas; cadastre outro dispositivo.
+
+## Testes e validação
+
+```powershell
+.\.venv\Scripts\python.exe manage.py check
+.\.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
+.\.venv\Scripts\python.exe manage.py test tests -v 2
+.\.venv\Scripts\python.exe -m pip check
+```
+
+O GitHub Actions executa verificações, migrações e testes em Python 3.12 e 3.13 a cada push ou pull request. Os testes usam banco temporário e dados fictícios.
+
+## Configuração e estrutura
+
+- `config/`: configurações Django, rotas, ASGI e WSGI.
+- `rastreamento/`: modelos, migração, serializers, API e administração.
+- `tests/`: testes de comportamento, validação e isolamento.
+- `.vscode/`: configuração de execução local.
+- `requirements.txt`: faixas de dependências diretas.
+- `requirements.lock`: versões exatas validadas nesta entrega.
+- `docs/REVISAO.md`: relatório de alterações e roteiro para revisão.
+
+SQLite atende ao desenvolvimento local. `.venv`, banco, logs, caches e `.env` ficam fora do Git. Não há carregamento automático de `.env`: defina variáveis no ambiente do processo.
+
+| Variável | Padrão local | Observação |
+| --- | --- | --- |
+| `DJANGO_DEBUG` | `true` | Use `false` fora do desenvolvimento |
+| `DJANGO_SECRET_KEY` | chave pública de desenvolvimento | Obrigatória com debug desligado; use um segredo aleatório |
+| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1,[::1]` | Hosts separados por vírgula |
+
+Com debug desligado, o sistema exige HTTPS e cookies seguros. `runserver` é somente para desenvolvimento. Antes de publicar, configure servidor de aplicação, arquivos estáticos, banco e backups, segredo, HTTPS e hosts; execute `manage.py check --deploy` no ambiente de produção. O limite de 120 requisições/minuto por usuário usa cache local e não substitui proteção de infraestrutura.
+
+## Próximas etapas
+
+- Cliente de localização com autorização explícita e credenciais limitadas por dispositivo.
+- Mapa com indicação de última atualização e precisão.
+- Registro de autorização, retenção de histórico e trilha de auditoria.
+- Alertas, recuperação de acesso e monitoramento de falhas.
+- PostgreSQL, backups e implantação com HTTPS após validação do fluxo.
+
+Referências: [Django 5.2 LTS](https://www.djangoproject.com/download/) e [autenticação do Django REST Framework](https://www.django-rest-framework.org/api-guide/authentication/).
