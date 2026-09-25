@@ -54,3 +54,15 @@ class Localizacao(models.Model):
 
     def __str__(self):
         return f"{self.dispositivo.nome} @ {self.capturado_em}"
+
+
+class LinkDispositivo(models.Model):
+    dispositivo = models.ForeignKey(Dispositivo, on_delete=models.CASCADE, related_name='links_envio')
+    token_hash = models.CharField(max_length=64, unique=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    expira_em = models.DateTimeField()
+    utilizado_em = models.DateTimeField(null=True, blank=True)
+    revogado_em = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-criado_em']

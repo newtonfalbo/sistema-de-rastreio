@@ -1,0 +1,31 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Rastreio: iniciar servidor local",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}/scripts/iniciar.ps1", "-SemAbrir"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "presentation": {"reveal": "always", "panel": "dedicated", "focus": true},
+      "problemMatcher": []
+    },
+    {
+      "label": "Rastreio: criar conta administrativa",
+      "type": "process",
+      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "args": ["manage.py", "createsuperuser"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "presentation": {"reveal": "always", "panel": "dedicated", "focus": true},
+      "problemMatcher": []
+    },
+    {
+      "label": "Rastreio: verificar e testar",
+      "type": "process",
+      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "args": ["manage.py", "test", "tests", "-v", "2"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": []
+    }
+  ]
+}

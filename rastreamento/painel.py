@@ -13,6 +13,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from .forms import DispositivoForm, PessoaForm
+from .celular import public_origin
 from .models import Dispositivo, Localizacao, Pessoa
 
 
@@ -43,7 +44,7 @@ def painel(request):
         'dispositivos_ativos': dispositivos.filter(ativo=True),
         'ultima': ultima, 'posicao_antiga': bool(ultima and ultima.capturado_em < timezone.now() - timedelta(minutes=15)),
         'pagina': pagina, 'pontos': pontos, 'map_config': {'tile_url': settings.MAP_TILE_URL, 'attribution': settings.MAP_ATTRIBUTION},
-        'total_pessoas': pessoas.count(),
+        'total_pessoas': pessoas.count(), 'celular_disponivel': bool(public_origin()),
         'total_dispositivos': Dispositivo.objects.filter(pessoa__responsavel=request.user).count(),
         'pessoa_form': PessoaForm(auto_id='pessoa_%s'),
         'dispositivo_form': DispositivoForm(user=request.user, initial={'pessoa': selecionada}, auto_id='dispositivo_%s'),

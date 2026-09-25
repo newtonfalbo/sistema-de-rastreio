@@ -102,19 +102,19 @@ O GitHub Actions executa verificações, migrações e testes em Python 3.12 e 3
 - `requirements.lock`: versões exatas validadas nesta entrega.
 - `docs/REVISAO.md`: relatório de alterações e roteiro para revisão.
 
-SQLite atende ao desenvolvimento local. `.venv`, banco, logs, caches e `.env` ficam fora do Git. Não há carregamento automático de `.env`: defina variáveis no ambiente do processo.
+SQLite atende ao desenvolvimento local. `.venv`, `.local`, banco, logs, caches e `.env` ficam fora do Git. Não há carregamento automático de `.env`: defina variáveis no ambiente do processo.
 
 | Variável | Padrão local | Observação |
 | --- | --- | --- |
 | `DJANGO_DEBUG` | `true` | Use `false` fora do desenvolvimento |
-| `DJANGO_SECRET_KEY` | chave pública de desenvolvimento | Obrigatória com debug desligado; use um segredo aleatório |
+| `DJANGO_SECRET_KEY` | chave local aleatória em `.local/django-secret.key` | Obrigatória com debug desligado; pelo menos 50 caracteres e boa aleatoriedade |
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1,[::1]` | Hosts separados por vírgula |
 
 Com debug desligado, o sistema exige HTTPS e cookies seguros. `runserver` é somente para desenvolvimento. Antes de publicar, configure servidor de aplicação, arquivos estáticos, banco e backups, segredo, HTTPS e hosts; execute `manage.py check --deploy` no ambiente de produção. O limite de 120 requisições/minuto por usuário usa cache local e não substitui proteção de infraestrutura.
 
 ## Próximas etapas
 
-- Cliente de localização com autorização explícita e credenciais limitadas por dispositivo.
+- Evoluir o envio pontual por link para um cliente com credenciais limitadas por dispositivo, após os testes.
 - Evoluir o mapa e contratar/configurar um provedor apropriado à implantação.
 - Registro de autorização, retenção de histórico e trilha de auditoria.
 - Alertas, recuperação de acesso e monitoramento de falhas.
@@ -140,3 +140,30 @@ node --test tests/painel.test.cjs
 Veja [o relatório da segunda entrega](docs/REVISAO-PAINEL.md).
 
 Referências da implementação: [Leaflet](https://leafletjs.com/examples/quick-start/) e [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition).
+
+
+## Conectar o celular por link temporário
+
+A seção **Conectar celular** permite ao responsável gerar um link e QR Code exclusivos do dispositivo. Pré-requisitos: dispositivo ativo, compartilhamento da pessoa habilitado e receptor HTTPS configurado. O link permite **um envio**, expira em **30 minutos** e não permite consultar dados do painel. Gerar outro link revoga o anterior; o botão de revogação invalida todos os links pendentes do dispositivo.
+
+O celular abre `/celular/`, confirma pessoa e dispositivo, autoriza e envia uma posição. Não precisa instalar aplicativo. Não há coleta em segundo plano. O navegador remove o segredo da barra de endereço; atualizar essa página exige abrir novamente o link original enquanto ele for válido. Depois de enviar, o responsável atualiza o painel local para consultar a captura.
+
+O QR Code é gerado localmente. O banco armazena apenas o hash do segredo do link. O segredo vai no fragmento da URL e no corpo das requisições POST, nunca como parâmetro de consulta. Compartilhe o link somente com a pessoa correta: quem o possui pode enviar uma posição para esse dispositivo, durante sua validade.
+
+**Estado desta entrega:** implementação e testes locais concluídos; ativação do túnel externo Cloudflare depende de autorização específica do usuário. Nenhum endereço HTTPS público foi ativado nesta etapa. Não envie `127.0.0.1` ao celular.
+
+O receptor usa `scripts/servidor-celular.py`, Waitress em `127.0.0.1:8001` e rotas isoladas em `config/mobile_root_urls.py`. Ele lê o endereço HTTPS de `.local/mobile-origin.txt`. Esse arquivo só deve ser preenchido após ativar o túnel aprovado. O painel permanece em `127.0.0.1:8000`. O receptor não publica `/admin/`, `/api/`, `/entrar/` nem cadastros. A Cloudflare intermediará os dados transmitidos se o túnel for autorizado; isso é um ambiente temporário de teste, não implantação definitiva.
+
+## Inicialização local e proteção de acesso
+
+No VS Code, use **Terminal → Executar Tarefa** e escolha **Rastreio: iniciar servidor local** ou **Rastreio: criar conta administrativa**. Alternativamente, na raiz, execute `./scripts/iniciar.ps1`. O script verifica a configuração, aplica migrações e, se necessário, solicita a criação da conta no terminal. Não há senha padrão. Se já existir servidor na porta 8000, ele informa o conflito em vez de iniciar outro.
+
+A chave local é gerada aleatoriamente e persistida em `.local/django-secret.key`. No Windows, o diretório herda as permissões da pasta do projeto; evite compartilhar essa pasta ou seu backup com terceiros. Como a pasta do projeto está no OneDrive, exclusão do Git não equivale a exclusão da sincronização do OneDrive.
+
+O login do painel, administrador e API navegável usa django-axes: cinco falhas para o mesmo usuário/IP bloqueiam novas tentativas por 15 minutos. O bloqueio é registrado no banco, não apenas na memória do processo. Credenciais não são gravadas em texto no registro de falhas. O endereço IP é o da conexão direta; não confiamos automaticamente em `X-Forwarded-For`. Uma implantação com proxy precisará de configuração própria.
+
+Para desbloqueio administrativo local, consulte `manage.py axes_reset --help`. Para manutenção de logs antigos, consulte `manage.py axes_reset_logs --help`; não há tarefa automática de retenção configurada nesta entrega. A combinação usuário/IP não substitui proteção de borda contra ataques distribuídos, e não abrange adivinhação de tokens da API.
+
+Respostas dinâmicas recebem `no-store`. Cookies de sessão são HttpOnly, têm duração máxima de oito horas sem renovação por atividade e expiram ao fechar o navegador (a restauração de sessão do navegador pode preservar cookies). Câmera e microfone ficam desabilitados pela política de permissões; geolocalização é limitada à própria origem. Produção exige segredo forte e lista explícita de hosts.
+
+Relatório: [conexão do celular e segurança](docs/REVISAO-CELULAR-SEGURANCA.md).

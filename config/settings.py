@@ -1,6 +1,8 @@
 """Configuração local por padrão; produção exige segredo e hosts explícitos."""
 import os
 from pathlib import Path
+from datetime import timedelta
+from config.local_secret import local_secret
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -10,7 +12,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
 if not SECRET_KEY:
     if not DEBUG:
         raise ImproperlyConfigured("Defina DJANGO_SECRET_KEY com DJANGO_DEBUG=false.")
-    SECRET_KEY = "desenvolvimento-local-apenas-nao-utilizar-em-producao"
+    SECRET_KEY = local_secret(BASE_DIR)
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]").split(",")
@@ -19,16 +21,18 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes",
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
-    "rest_framework", "rest_framework.authtoken", "rastreamento",
+    "rest_framework", "rest_framework.authtoken", "rastreamento", "axes",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "rastreamento.security.SecurityHeadersMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 ROOT_URLCONF = "config.urls"
 TEMPLATES = [{
@@ -88,3 +92,31 @@ LOGOUT_REDIRECT_URL = 'login'
 
 MAP_TILE_URL = os.environ.get('RASTREIO_MAP_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png')
 MAP_ATTRIBUTION = os.environ.get('RASTREIO_MAP_ATTRIBUTION', '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>')
+
+
+# Proteção contra força bruta em todos os logins Django (painel, admin e API navegável).
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+AXES_HANDLER = 'axes.handlers.database.AxesDatabaseHandler'
+AXES_CLIENT_IP_CALLABLE = 'rastreamento.security.direct_client_ip'
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_LOCKOUT_PARAMETERS = [['username', 'ip_address']]
+AXES_RESET_ON_SUCCESS = True
+AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
+AXES_LOCKOUT_TEMPLATE = 'registration/bloqueado.html'
+SESSION_COOKIE_NAME = 'rastreio_sessionid'
+CSRF_COOKIE_NAME = 'rastreio_csrftoken'
+SESSION_COOKIE_AGE = 8 * 60 * 60
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SECURE_REFERRER_POLICY = 'same-origin'
+
+if not DEBUG:
+    if len(SECRET_KEY) < 50 or len(set(SECRET_KEY)) < 5:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY deve ser um segredo aleatório forte de pelo menos 50 caracteres.')
+    if not os.environ.get('DJANGO_ALLOWED_HOSTS') or '*' in ALLOWED_HOSTS or not ALLOWED_HOSTS:
+        raise ImproperlyConfigured('Defina DJANGO_ALLOWED_HOSTS explicitamente, sem wildcard, para produção.')
