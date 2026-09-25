@@ -73,7 +73,7 @@
       ])]);
       document.getElementById("map-intro").remove();
       const map = L.map("map");
-      const tiles = L.tileLayer(config.tile_url, {maxZoom: 19, attribution: config.attribution}).addTo(map);
+      const tiles = L.tileLayer(config.tile_url, {maxZoom: 19, attribution: config.attribution, referrerPolicy: "origin"}).addTo(map);
       tiles.on("tileerror", () => { mapStatus.textContent = "Algumas imagens do mapa não carregaram. As coordenadas permanecem no histórico."; });
       const bounds = [];
       points.forEach((point, index) => {
