@@ -1,8 +1,8 @@
 # Sistema de Rastreio
 
-Backend para cadastrar pessoas e dispositivos, receber coordenadas e consultar o histórico de localização. Esta primeira versão entrega uma API REST autenticada e o painel administrativo do Django.
+Backend para cadastrar pessoas e dispositivos, receber coordenadas e consultar o histórico de localização. A aplicação entrega painel web, API REST autenticada e administração Django.
 
-**Não localiza celulares por número, IMEI ou número de série.** Um aplicativo ou dispositivo autorizado precisa obter a localização e enviá-la à API. Mapa, aplicativo móvel, coleta em segundo plano e alertas ainda não estão implementados.
+**Não localiza celulares por número, IMEI ou número de série.** Um aplicativo ou dispositivo autorizado precisa obter a localização e enviá-la à API. O painel possui mapa e coleta pontual pelo navegador. Aplicativo móvel, coleta em segundo plano e alertas ainda não estão implementados.
 
 ## Executar no Windows / VS Code
 
@@ -18,6 +18,7 @@ python -m venv .venv
 
 Nesta cópia local o ambiente `.venv` já foi preparado. Se `python` não estiver no PATH, utilize diretamente `.\.venv\Scripts\python.exe` nos comandos seguintes. O ambiente virtual depende do Python usado em sua criação; em outro computador, crie-o novamente com uma instalação própria do Python.
 
+- Painel de acompanhamento: http://127.0.0.1:8000/
 - API navegável: http://127.0.0.1:8000/api/
 - Login de sessão: http://127.0.0.1:8000/api-auth/login/
 - Administração: http://127.0.0.1:8000/admin/
@@ -114,9 +115,28 @@ Com debug desligado, o sistema exige HTTPS e cookies seguros. `runserver` é som
 ## Próximas etapas
 
 - Cliente de localização com autorização explícita e credenciais limitadas por dispositivo.
-- Mapa com indicação de última atualização e precisão.
+- Evoluir o mapa e contratar/configurar um provedor apropriado à implantação.
 - Registro de autorização, retenção de histórico e trilha de auditoria.
 - Alertas, recuperação de acesso e monitoramento de falhas.
 - PostgreSQL, backups e implantação com HTTPS após validação do fluxo.
 
 Referências: [Django 5.2 LTS](https://www.djangoproject.com/download/) e [autenticação do Django REST Framework](https://www.django-rest-framework.org/api-guide/authentication/).
+
+
+## Painel web e envio pelo navegador (segunda entrega)
+
+Entre em `http://127.0.0.1:8000/` com sua conta. Cadastre pessoas e dispositivos no próprio painel. O compartilhamento começa desativado e exige confirmação para ativação na interface. Selecione a pessoa para consultar última posição, precisão e histórico paginado (20 registros por página).
+
+Para enviar a posição deste navegador, ative o compartilhamento, selecione o dispositivo correto, marque a autorização e clique em **Obter e enviar minha posição**. A coleta ocorre uma única vez, exige permissão do navegador e utiliza a sessão com CSRF. Não há coleta automática em segundo plano. Após o envio, use **Atualizar o painel**. O ambiente precisa ser HTTPS ou localhost; acessar pelo IP da rede sem HTTPS pode impedir a geolocalização.
+
+O mapa é carregado apenas por solicitação. Leaflet vem de unpkg, e a camada padrão é OpenStreetMap, com atribuição. Na revisão desta máquina o provedor bloqueou imagens de ruas; os pontos foram exibidos, mas a camada cartográfica não pôde ser validada. O histórico funciona independentemente do provedor. Configure `RASTREIO_MAP_TILE_URL` (template XYZ) e `RASTREIO_MAP_ATTRIBUTION` para um provedor autorizado adequado à implantação. Essas configurações são públicas no navegador; não use segredos privados nelas. Não houve contratação de serviço externo.
+
+Testes adicionais de JavaScript, sem dependências npm (Node.js 22):
+
+```powershell
+node --test tests/painel.test.cjs
+```
+
+Veja [o relatório da segunda entrega](docs/REVISAO-PAINEL.md).
+
+Referências da implementação: [Leaflet](https://leafletjs.com/examples/quick-start/) e [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition).

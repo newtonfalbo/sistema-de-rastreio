@@ -24,3 +24,7 @@ jobs:
       - run: python manage.py makemigrations --check --dry-run
       - run: python manage.py migrate --noinput
       - run: python manage.py test tests -v 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/painel.test.cjs

@@ -81,3 +81,10 @@ SECURE_SSL_REDIRECT = not DEBUG
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'painel'
+LOGOUT_REDIRECT_URL = 'login'
+
+MAP_TILE_URL = os.environ.get('RASTREIO_MAP_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png')
+MAP_ATTRIBUTION = os.environ.get('RASTREIO_MAP_ATTRIBUTION', '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>')
