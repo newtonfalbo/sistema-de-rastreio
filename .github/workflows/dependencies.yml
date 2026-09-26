@@ -1,0 +1,30 @@
+name: Auditoria de dependencias
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'requirements.txt'
+      - 'requirements.lock'
+      - 'scripts/auditar-dependencias.py'
+      - '.github/workflows/dependencies.yml'
+  pull_request:
+    paths:
+      - 'requirements.txt'
+      - 'requirements.lock'
+      - 'scripts/auditar-dependencias.py'
+      - '.github/workflows/dependencies.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python scripts/auditar-dependencias.py

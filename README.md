@@ -134,6 +134,8 @@ Com debug desligado, o sistema exige HTTPS e cookies seguros. `runserver` é som
 
 Referências: [Django 5.2 LTS](https://www.djangoproject.com/download/) e [autenticação do Django REST Framework](https://www.django-rest-framework.org/api-guide/authentication/).
 
+Para consultar vulnerabilidades conhecidas das versões fixadas, execute `python scripts/auditar-dependencias.py`. O comando envia somente nomes e versões de `requirements.lock` à API pública OSV. Retorna 0 quando não há avisos, 1 quando há avisos para revisão e 2 quando a consulta é inconclusiva. O workflow **Auditoria de dependencias** executa essa consulta quando os arquivos de dependências/auditor mudam e permite execução manual no GitHub Actions. Ele não atualiza pacotes automaticamente e não é uma auditoria completa do sistema.
+
 
 ## Painel web e envio pelo navegador (segunda entrega)
 
