@@ -170,6 +170,10 @@ O receptor usa `scripts/servidor-celular.py`, Waitress em `127.0.0.1:8001` e rot
 
 ## Inicialização local e proteção de acesso
 
+Para verificar a conexão do celular sem enviar posições, execute `./.venv/Scripts/python.exe scripts/verificar-conexao-celular.py`. Por padrão, verifica somente o receptor local. Acrescente `--externo` para consultar também o HTTPS e conferir a recusa das rotas de painel/admin/API. O comando não imprime o endereço privado nem segue redirecionamentos. Retorno 0 indica verificações aprovadas, 1 indica falha e 2 indica configuração inconclusiva. Uma resposta aprovada não comprova funcionamento do GPS ou permissão no aparelho.
+
+O diagnóstico usa `RASTREIO_PUBLIC_ORIGIN`, quando definida, ou `.local/mobile-origin.txt`. O inicializador atual do receptor lê somente esse arquivo; mantenha os valores coerentes se utilizar a variável no painel. Execute com a conta local que possui acesso ao arquivo privado, sem ampliar suas permissões. O comando não inicia ou reinicia serviços.
+
 No VS Code, use **Terminal → Executar Tarefa** e escolha **Rastreio: iniciar servidor local** ou **Rastreio: criar conta administrativa**. Alternativamente, na raiz, execute `./scripts/iniciar.ps1`. O script verifica a configuração, aplica migrações e, se necessário, solicita a criação da conta no terminal. Não há senha padrão. Se já existir servidor na porta 8000, ele informa o conflito em vez de iniciar outro.
 
 A chave local é gerada aleatoriamente e persistida em `.local/django-secret.key`. No Windows, o diretório herda as permissões da pasta do projeto; evite compartilhar essa pasta ou seu backup com terceiros. Como a pasta do projeto está no OneDrive, exclusão do Git não equivale a exclusão da sincronização do OneDrive.
