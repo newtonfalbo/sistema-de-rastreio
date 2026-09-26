@@ -10,6 +10,8 @@ O painel e o receptor móvel devem receber a **mesma configuração**. Caso cont
 
 ## Migração de uma instalação existente
 
+Consulte também [Backup e recuperação](BACKUP-RECUPERACAO.md), incluindo verificação somente em leitura e cuidados para não restaurar acessos já revogados.
+
 A migração dos dados reais ainda não foi executada. Para fazê-la em uma janela de manutenção:
 
 1. Encerre o painel, receptor e túnel para evitar gravações durante a cópia.
