@@ -22,7 +22,7 @@ Este documento registra requisitos de produto e pontos para revisão jurídica. 
 | Retenção | Definir prazos para posições, tokens, tentativas de login, logs e backups; registrar exceções legais. Existe comando manual de limpeza de posições/links com simulação e limites, sem prazo padrão ou agendamento. A política de retenção e o tratamento de logs/backups permanecem pendentes. A validade do link não apaga automaticamente o histórico. |
 | Segurança | Manter controle de acesso, HTTPS, isolamento, segredos fora do código, atualizações, backups e monitoramento. Existem controles técnicos; faltam validação de infraestrutura e procedimentos operacionais completos. |
 | Fornecedores e transferência internacional | Avaliar Cloudflare, mapas/CDN, hospedagem e sincronização OneDrive: contratos, papéis, acesso e eventual transferência internacional, com mecanismo jurídico aplicável. HTTPS não elimina essa obrigação. Pendente de revisão. |
-| Incidentes | Preparar detecção, contenção, análise de risco, registro e comunicação quando exigida. Ainda não existe plano operacional de incidentes. |
+| Incidentes | Há [procedimento inicial de resposta](RESPOSTA-INCIDENTES.md), com contenção, evidências e referências de comunicação. Faltam responsáveis/contatos, validação jurídica, monitoramento e exercício operacional. |
 | Crianças e adolescentes | Avaliar melhor interesse e requisitos específicos antes de implementar esse uso. Não inferir que um cadastro feito por familiar autoriza todo rastreamento. Fora da validação inicial. |
 | Avaliação de impacto | Avaliar necessidade de relatório de impacto e riscos de exposição de rotinas, locais frequentados e relacionamentos, antes de ampliação de escopo. |
 
@@ -35,7 +35,7 @@ Autenticação; isolamento por responsável; compartilhamento desativado por pad
 ## Limites conhecidos
 
 - Possuir o link não comprova a identidade do aparelho ou da pessoa. Coordenadas podem ser falsificadas pelo cliente.
-- Há evidência versionada da autorização de novos envios, mas não uma trilha completa de todas as operações nem prova da identidade do titular. Registros anteriores não recebem evidência retroativa. Ainda faltam política automatizada de retenção, canal para direitos e plano de incidentes.
+- Há evidência versionada da autorização de novos envios, mas não uma trilha completa de todas as operações nem prova da identidade do titular. Registros anteriores não recebem evidência retroativa. Ainda faltam política automatizada de retenção, canal para direitos e validação operacional do procedimento de incidentes.
 - O banco e arquivos privados ficam fora do Git, mas a pasta local está em área do OneDrive. A configuração de sincronização precisa ser avaliada; não foi modificada nesta etapa.
 - O teste HTTPS temporário não equivale a uma implantação regularizada nem a auditoria de segurança.
 
