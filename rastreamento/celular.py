@@ -118,9 +118,10 @@ def carregar_link(request):
         token = payload.get('token', '')
         if not isinstance(token, str) or not 32 <= len(token) <= 128:
             raise ValueError
-    except (ValueError, AttributeError, UnicodeError):
+        token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+    except (ValueError, AttributeError, UnicodeError, RecursionError):
         return None, None
-    link = links_validos().select_related('dispositivo__pessoa__responsavel').filter(token_hash=hashlib.sha256(token.encode()).hexdigest()).first()
+    link = links_validos().select_related('dispositivo__pessoa__responsavel').filter(token_hash=token_hash).first()
     return link, payload
 
 

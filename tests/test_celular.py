@@ -48,6 +48,22 @@ class LinkCelularTests(TestCase):
         self.link.refresh_from_db()
         self.assertIsNone(self.link.utilizado_em)
 
+    def test_json_malformado_nao_causa_erro_interno_nem_consume_link(self):
+        bodies = [
+            '[]', 'null', '{',
+            '{"token":"' + r'\ud800' * 43 + '"}',
+            '[' * 1500 + '0' + ']' * 1500,
+        ]
+        for action in ['verificar', 'enviar']:
+            for body in bodies:
+                with self.subTest(action=action, body_size=len(body)):
+                    response = self.client.post(f'/celular/{action}/', body, content_type='application/json')
+                    self.assertEqual(response.status_code, 410)
+        self.link.refresh_from_db()
+        self.assertIsNone(self.link.utilizado_em)
+        self.assertFalse(Localizacao.objects.exists())
+        self.assertEqual(self.post().status_code, 200)
+
     def test_envio_unico_e_sem_leitura_do_historico(self):
         response = self.posicao()
         self.assertEqual(response.status_code, 201)
