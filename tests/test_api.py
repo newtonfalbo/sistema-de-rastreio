@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.db import IntegrityError, transaction
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
@@ -144,6 +144,18 @@ class RastreioAPITests(APITestCase):
         response = self.client.post('/api/localizacoes/', content, content_type='application/json')
         self.assertEqual(response.status_code, 400)
         self.assertFalse(Localizacao.objects.exists())
+
+    @override_settings(DATA_UPLOAD_MAX_MEMORY_SIZE=128)
+    def test_api_respeita_limite_de_corpo_json_e_formulario(self):
+        from urllib.parse import urlencode
+        import json
+        data = {'nome': 'Teste de limite ficticio', 'descricao': 'x' * 400}
+        for content_type, body in [('application/json', json.dumps(data)),
+                                   ('application/x-www-form-urlencoded', urlencode(data))]:
+            with self.subTest(content_type=content_type):
+                response = self.client.post('/api/pessoas/', body, content_type=content_type)
+                self.assertIn(response.status_code, [400, 413])
+        self.assertFalse(Pessoa.objects.filter(nome=data['nome']).exists())
 
     def test_compartilhamento_desativado_bloqueia_novos_registros(self):
         self.assertEqual(self.registrar().status_code, 201)
