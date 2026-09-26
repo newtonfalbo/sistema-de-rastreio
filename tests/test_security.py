@@ -87,6 +87,24 @@ class SegurancaLoginTests(TestCase):
         self.falhar(quantidade=1)
         self.assertNotIn('Senha-errada-123', AccessAttempt.objects.get().post_data)
 
+    def test_campos_privados_nao_sao_copiados_para_diagnostico_de_login(self):
+        private = {name: f'valor-privado-{name}' for name in [
+            'token', 'csrfmiddlewaretoken', 'next', 'latitude', 'longitude',
+            'pessoa', 'dispositivo', 'email',
+        ]}
+        from urllib.parse import urlencode
+        with self.assertLogs('axes', level='WARNING') as logs:
+            self.client.post('/entrar/?' + urlencode(private), {
+                'username': self.usuario.username, 'password': 'Senha-errada-123', **private,
+            }, HTTP_USER_AGENT='agente-privado-de-teste')
+        attempt = AccessAttempt.objects.get()
+        diagnostic = attempt.get_data + attempt.post_data + '\n'.join(logs.output)
+        for value in private.values():
+            self.assertNotIn(value, diagnostic)
+        self.assertNotIn('agente-privado-de-teste', '\n'.join(logs.output))
+        self.assertEqual(attempt.failures_since_start, 1)
+        self.assertEqual(attempt.username, self.usuario.username)
+
     def test_login_valido_nao_redireciona_para_dominio_externo(self):
         response = self.client.post('/entrar/?next=https://example.com/', {'username': self.usuario.username, 'password': 'Senha-correta-935!'})
         self.assertEqual(response['Location'], '/')

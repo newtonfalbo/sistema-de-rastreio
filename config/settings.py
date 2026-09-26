@@ -108,6 +108,13 @@ AXES_COOLOFF_TIME = timedelta(minutes=15)
 AXES_LOCKOUT_PARAMETERS = [['username', 'ip_address']]
 AXES_RESET_ON_SUCCESS = True
 AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
+# Mascara cópias de diagnóstico; usuário/IP estruturados continuam necessários ao bloqueio.
+AXES_SENSITIVE_PARAMETERS = [
+    'username', 'ip_address', 'user_agent', 'password', 'token', 'access_token',
+    'refresh_token', 'api_key', 'secret', 'csrfmiddlewaretoken', 'next',
+    'latitude', 'longitude', 'precisao_metros', 'capturado_em', 'pessoa',
+    'dispositivo', 'nome', 'email', 'telefone', 'documento', 'cpf',
+]
 AXES_LOCKOUT_TEMPLATE = 'registration/bloqueado.html'
 SESSION_COOKIE_NAME = 'rastreio_sessionid'
 CSRF_COOKIE_NAME = 'rastreio_csrftoken'
