@@ -139,6 +139,12 @@ class RastreioAPITests(APITestCase):
         del data['capturado_em']
         self.assertEqual(self.client.post('/api/localizacoes/', data, format='json').status_code, 400)
 
+    def test_json_excessivamente_aninhado_nao_causa_erro_interno(self):
+        content = '[' * 20000 + '0' + ']' * 20000
+        response = self.client.post('/api/localizacoes/', content, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(Localizacao.objects.exists())
+
     def test_compartilhamento_desativado_bloqueia_novos_registros(self):
         self.assertEqual(self.registrar().status_code, 201)
         response = self.client.patch(f'/api/pessoas/{self.pessoa.pk}/', {'compartilhamento_ativo': False}, format='json')
