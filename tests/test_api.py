@@ -209,10 +209,35 @@ class RastreioAPITests(APITestCase):
         self.usuario.save()
         self.usuario.user_permissions.set(Permission.objects.filter(content_type__app_label='rastreamento'))
         self.client.force_login(self.usuario)
-        self.assertEqual(self.client.get('/admin/rastreamento/pessoa/').status_code, 403)
+        self.assertEqual(self.client.get('/admin/rastreamento/pessoa/').status_code, 302)
         self.usuario.is_superuser = True
         self.usuario.save()
         self.assertEqual(self.client.get('/admin/rastreamento/pessoa/').status_code, 200)
+
+    def test_admin_global_recusa_staff_com_todas_as_permissoes(self):
+        self.usuario.is_staff = True
+        self.usuario.save()
+        self.usuario.user_permissions.set(Permission.objects.all())
+        self.client.force_login(self.usuario)
+        for path in ['/admin/', '/admin/auth/user/', '/admin/auth/group/',
+                     '/admin/authtoken/tokenproxy/', '/admin/axes/accessattempt/']:
+            with self.subTest(path=path):
+                response = self.client.get(path)
+                self.assertEqual(response.status_code, 302)
+                self.assertIn('/admin/login/', response['Location'])
+
+    def test_login_admin_exige_superusuario_e_preserva_seu_acesso(self):
+        self.usuario.is_staff = True
+        self.usuario.save()
+        credentials = {'username': self.usuario.username, 'password': 'Senha-de-teste-927!'}
+        response = self.client.post('/admin/login/', credentials)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.usuario.is_superuser = True
+        self.usuario.save()
+        response = self.client.post('/admin/login/', credentials)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.usuario.pk)
 
     def test_banco_rejeita_coordenadas_fora_dos_limites(self):
         with self.assertRaises(IntegrityError), transaction.atomic():
