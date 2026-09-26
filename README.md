@@ -170,7 +170,7 @@ No VS Code, use **Terminal → Executar Tarefa** e escolha **Rastreio: iniciar s
 
 A chave local é gerada aleatoriamente e persistida em `.local/django-secret.key`. No Windows, o diretório herda as permissões da pasta do projeto; evite compartilhar essa pasta ou seu backup com terceiros. Como a pasta do projeto está no OneDrive, exclusão do Git não equivale a exclusão da sincronização do OneDrive.
 
-O login do painel, administrador e API navegável usa django-axes: cinco falhas para o mesmo usuário/IP bloqueiam novas tentativas por 15 minutos. O bloqueio é registrado no banco, não apenas na memória do processo. Credenciais não são gravadas em texto no registro de falhas. O endereço IP é o da conexão direta; não confiamos automaticamente em `X-Forwarded-For`. Uma implantação com proxy precisará de configuração própria.
+O login do painel, administrador e API navegável usa django-axes: cinco falhas para o mesmo usuário/IP bloqueiam novas tentativas por 15 minutos. O bloqueio é registrado no banco, não apenas na memória do processo. A senha e os campos conhecidos configurados como privados são mascarados nas cópias de diagnóstico; isso não garante ocultar qualquer campo arbitrário enviado ao login. O endereço IP é o da conexão direta; não confiamos automaticamente em `X-Forwarded-For`. Uma implantação com proxy precisará de configuração própria.
 
 Para desbloqueio administrativo local, consulte `manage.py axes_reset --help`. Para manutenção de logs antigos, consulte `manage.py axes_reset_logs --help`; não há tarefa automática de retenção configurada nesta entrega. A combinação usuário/IP não substitui proteção de borda contra ataques distribuídos, e não abrange adivinhação de tokens da API.
 
