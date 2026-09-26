@@ -1,10 +1,13 @@
 """Diagnóstico sem credenciais, posições ou exibição do endereço privado."""
 import argparse
-import os
+import sys
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from config.mobile_origin import load_mobile_origin
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -13,17 +16,9 @@ class NoRedirect(HTTPRedirectHandler):
 
 
 def read_origin(root):
-    value = os.environ.get('RASTREIO_PUBLIC_ORIGIN') or (
-        root / '.local' / 'mobile-origin.txt'
-    ).read_text(encoding='utf-8-sig').strip()
+    value = load_mobile_origin(root)
     parsed = urlsplit(value)
-    port = parsed.port  # Valida também portas malformadas.
-    if (parsed.scheme != 'https' or not parsed.hostname
-            or parsed.username is not None or parsed.password is not None
-            or parsed.path not in ('', '/') or parsed.query or parsed.fragment
-            or any(char.isspace() or ord(char) < 32 for char in value)):
-        raise ValueError('Origem inválida')
-    return value.rstrip('/'), parsed.netloc
+    return value, parsed.netloc
 
 
 def probe(opener, url, host=None):

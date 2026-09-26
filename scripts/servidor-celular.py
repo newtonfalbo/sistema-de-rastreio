@@ -7,12 +7,14 @@ from urllib.parse import urlsplit
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 from config.storage import data_directory
+from config.mobile_origin import load_mobile_origin
 
 private_root = data_directory(root)
-origin = (root / '.local' / 'mobile-origin.txt').read_text(encoding='utf-8-sig').strip()
+try:
+    origin = load_mobile_origin(root)
+except (OSError, UnicodeError, ValueError):
+    raise SystemExit('Configure uma origem HTTPS válida e acessível para o receptor.') from None
 parsed = urlsplit(origin)
-if parsed.scheme != 'https' or not parsed.hostname or parsed.path not in ('', '/') or parsed.query or parsed.fragment or parsed.username:
-    raise SystemExit('Configure um endereço HTTPS válido em .local/mobile-origin.txt.')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'config.mobile_settings'
 os.environ['DJANGO_DEBUG'] = 'false'
 if not os.environ.get('DJANGO_SECRET_KEY'):

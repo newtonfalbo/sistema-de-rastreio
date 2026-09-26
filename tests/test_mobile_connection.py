@@ -1,6 +1,7 @@
 import contextlib
 import importlib.util
 import io
+import os
 from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
@@ -44,7 +45,7 @@ class MobileConnectionTests(TestCase):
 
     def test_invalid_configuration_is_inconclusive(self):
         for value in ['http://example.com', 'https://user:password@example.com', 'https://example.com:bad', 'https://example.com/path', 'https://example.com?q=secret', 'https://example.com#secret', 'https://exam\nple.com']:
-            with self.subTest(value=value), patch.dict(diagnostic.os.environ, {'RASTREIO_PUBLIC_ORIGIN': value}), contextlib.redirect_stdout(io.StringIO()) as output:
+            with self.subTest(value=value), patch.dict(os.environ, {'RASTREIO_PUBLIC_ORIGIN': value}), contextlib.redirect_stdout(io.StringIO()) as output:
                 self.assertEqual(diagnostic.main([]), 2)
                 self.assertNotIn(value, output.getvalue())
 

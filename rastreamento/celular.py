@@ -2,12 +2,11 @@
 import hashlib
 import json
 import logging
-import os
 import secrets
 from datetime import timedelta
 from io import BytesIO
 from types import SimpleNamespace
-from urllib.parse import urlsplit
+from config.mobile_origin import load_mobile_origin
 
 import qrcode
 import qrcode.image.svg
@@ -32,23 +31,15 @@ logger = logging.getLogger(__name__)
 
 
 def public_origin():
-    value = os.environ.get('RASTREIO_PUBLIC_ORIGIN', '')
-    if not value:
-        try:
-            value = (settings.BASE_DIR / '.local' / 'mobile-origin.txt').read_text(encoding='utf-8-sig').strip()
-        except FileNotFoundError:
-            return ''
-        except (OSError, UnicodeError):
-            logger.warning('Endereço móvel indisponível: confira acesso e codificação do arquivo local.')
-            return ''
     try:
-        parsed = urlsplit(value)
-        port = parsed.port
+        return load_mobile_origin(settings.BASE_DIR)
+    except FileNotFoundError:
+        return ''
+    except (OSError, UnicodeError):
+        logger.warning('Endereço móvel indisponível: confira acesso e codificação do arquivo local.')
+        return ''
     except ValueError:
         return ''
-    if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.path not in ('', '/'):
-        return ''
-    return value.rstrip('/')
 
 
 def links_validos():
