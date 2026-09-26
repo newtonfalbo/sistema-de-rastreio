@@ -1,6 +1,7 @@
 ﻿import base64
 import hashlib
 import json
+import logging
 import os
 import secrets
 from datetime import timedelta
@@ -25,6 +26,8 @@ from django.views.decorators.http import require_GET, require_POST
 from .models import Dispositivo, LinkDispositivo
 from .serializers import LocalizacaoSerializer
 
+logger = logging.getLogger(__name__)
+
 
 def public_origin():
     value = os.environ.get('RASTREIO_PUBLIC_ORIGIN', '')
@@ -33,7 +36,14 @@ def public_origin():
             value = (settings.BASE_DIR / '.local' / 'mobile-origin.txt').read_text(encoding='utf-8-sig').strip()
         except FileNotFoundError:
             return ''
-    parsed = urlsplit(value)
+        except (OSError, UnicodeError):
+            logger.warning('Endereço móvel indisponível: confira acesso e codificação do arquivo local.')
+            return ''
+    try:
+        parsed = urlsplit(value)
+        port = parsed.port
+    except ValueError:
+        return ''
     if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.path not in ('', '/'):
         return ''
     return value.rstrip('/')

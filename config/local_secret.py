@@ -7,7 +7,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 def local_secret(base_dir):
     directory = Path(base_dir) / '.local'
-    # No Windows, herdar as ACLs do projeto preserva o acesso do propriet?rio.
+    # No Windows, herdar as ACLs da pasta preserva o acesso do proprietário.
     directory.mkdir(mode=0o777 if os.name == 'nt' else 0o700, exist_ok=True)
     path = directory / 'django-secret.key'
     try:

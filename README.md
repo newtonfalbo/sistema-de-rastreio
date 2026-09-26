@@ -170,4 +170,6 @@ Relatório: [conexão do celular e segurança](docs/REVISAO-CELULAR-SEGURANCA.md
 
 ## Privacidade e uso permitido
 
+Para configurar o banco e a chave fora da pasta do projeto e verificar arquivos antes de publicar, consulte [Armazenamento privado e publicação](docs/ARMAZENAMENTO-PRIVADO.md). A configuração é opcional e não move dados automaticamente. O trabalho de 26/09 está registrado no [relatório da sessão](docs/REVISAO-2026-09-26.md).
+
 O projeto está em validação, sem declaração de conformidade jurídica integral. Os testes desta fase devem usar dados fictícios ou os próprios dados de adultos que participem voluntariamente. Não utilizar para rastreamento oculto. Antes de uso com terceiros, cumprir os requisitos documentados em [Privacidade e LGPD](docs/PRIVACIDADE-LGPD.md), com revisão jurídica adequada ao caso.
