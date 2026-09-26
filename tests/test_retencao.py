@@ -15,7 +15,7 @@ class RetencaoTests(TestCase):
     def setUp(self):
         self.owner = get_user_model().objects.create_user(username='retencao_teste')
         self.other = get_user_model().objects.create_user(username='outro_retencao')
-        self.person = Pessoa.objects.create(nome='Pessoa fictícia', responsavel=self.owner)
+        self.person = Pessoa.objects.create(nome='Pessoa fictícia', responsavel=self.owner, compartilhamento_ativo=True)
         self.device = Dispositivo.objects.create(nome='Dispositivo fictício', pessoa=self.person)
         other_person = Pessoa.objects.create(nome='Outra fictícia', responsavel=self.other)
         self.other_device = Dispositivo.objects.create(nome='Outro dispositivo', pessoa=other_person)

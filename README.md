@@ -85,6 +85,8 @@ Cada novo registro inclui versão e texto do aviso, horário de recebimento da c
 
 Desativar o dispositivo ou o compartilhamento da pessoa bloqueia novas posições; o histórico já armazenado continua acessível ao responsável. A última posição pode ser antiga: sempre confira `capturado_em`. O indicador de compartilhamento é um controle operacional, não um registro completo de consentimento.
 
+Desativar também revoga permanentemente os links pendentes. Reativar não recupera esses links: gere outro. A migração `0004` invalida uma vez os links pendentes anteriores à correção; posições e links usados são preservados. Para rotinas administrativas, use os métodos de salvamento do aplicativo e transações; atualizações SQL diretas ignoram essas regras.
+
 **Exclusão:** apagar uma pessoa remove seus dispositivos e suas localizações; apagar um dispositivo remove seu histórico. Não há lixeira. Registros individuais de localização não podem ser alterados ou apagados pela API. Dispositivos não podem ser transferidos entre pessoas; cadastre outro dispositivo.
 
 ## Testes e validação

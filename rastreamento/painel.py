@@ -89,5 +89,5 @@ def compartilhar(request, pessoa_id):
     else:
         pessoa.compartilhamento_ativo = ativar
         pessoa.save(update_fields=['compartilhamento_ativo'])
-        messages.success(request, 'Compartilhamento ativado.' if ativar else 'Compartilhamento desativado. Novos envios estão bloqueados.')
+        messages.success(request, 'Compartilhamento ativado. Gere um novo link se precisar enviar pelo celular.' if ativar else 'Compartilhamento desativado e links pendentes revogados. Novos envios estão bloqueados.')
     return redirect(f"{reverse('painel')}?pessoa={pessoa.pk}")

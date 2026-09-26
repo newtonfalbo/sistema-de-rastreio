@@ -14,6 +14,7 @@ import qrcode.image.svg
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -23,7 +24,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
-from .models import Dispositivo, LinkDispositivo
+from .models import Dispositivo, LinkDispositivo, Pessoa
 from .serializers import LocalizacaoSerializer
 from .autorizacao import aviso_envio
 
@@ -61,7 +62,15 @@ def links_validos():
 def emitir_link(dispositivo):
     token = secrets.token_urlsafe(32)
     with transaction.atomic():
-        Dispositivo.objects.select_for_update().get(pk=dispositivo.pk)
+        # Recarregar o estado dentro da transação: o objeto recebido pode estar antigo.
+        reference = Dispositivo.objects.get(pk=dispositivo.pk)
+        owner_id = Pessoa.objects.values_list('responsavel_id', flat=True).get(pk=reference.pessoa_id)
+        owner = get_user_model().objects.select_for_update().get(pk=owner_id)
+        person = Pessoa.objects.select_for_update().get(pk=reference.pessoa_id)
+        dispositivo = Dispositivo.objects.select_for_update().get(pk=dispositivo.pk)
+        if (not owner.is_active or not person.compartilhamento_ativo or not dispositivo.ativo
+                or person.responsavel_id != owner.pk or dispositivo.pessoa_id != person.pk):
+            raise ValueError('O vínculo ou a autorização mudou. Confira o cadastro antes de gerar outro link.')
         LinkDispositivo.objects.filter(dispositivo=dispositivo, utilizado_em__isnull=True, revogado_em__isnull=True).update(revogado_em=timezone.now())
         link = LinkDispositivo.objects.create(dispositivo=dispositivo, token_hash=hashlib.sha256(token.encode()).hexdigest(), expira_em=timezone.now()+timedelta(minutes=30))
     return link, token
@@ -76,7 +85,11 @@ def gerar_link(request, dispositivo_id):
     if not origin or not dispositivo.ativo or not dispositivo.pessoa.compartilhamento_ativo:
         messages.error(request, 'Ative o dispositivo e o compartilhamento e confirme que o endereço HTTPS de teste está configurado.')
         return redirect(f"{reverse('painel')}?pessoa={dispositivo.pessoa_id}")
-    link, token = emitir_link(dispositivo)
+    try:
+        link, token = emitir_link(dispositivo)
+    except (ValueError, Dispositivo.DoesNotExist, Pessoa.DoesNotExist, get_user_model().DoesNotExist):
+        messages.error(request, 'O cadastro mudou. Confira dispositivo e compartilhamento antes de gerar outro link.')
+        return redirect('painel')
     url = f'{origin}/celular/#{token}'
     output = BytesIO()
     qrcode.make(url, image_factory=qrcode.image.svg.SvgPathImage).save(output)

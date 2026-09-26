@@ -2,7 +2,8 @@ import uuid
 
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import models, router, transaction
+from django.utils import timezone
 
 
 class Pessoa(models.Model):
@@ -19,6 +20,21 @@ class Pessoa(models.Model):
     def __str__(self):
         return self.nome
 
+    def save(self, *args, **kwargs):
+        using = kwargs.get('using') or router.db_for_write(type(self), instance=self)
+        fields = kwargs.get('update_fields')
+        with transaction.atomic(using=using):
+            previous_owner = None
+            if not self._state.adding:
+                previous_owner = type(self).objects.using(using).select_for_update().filter(pk=self.pk).values_list('responsavel_id', flat=True).first()
+            super().save(*args, **kwargs)
+            disabled = not self.compartilhamento_ativo and (fields is None or 'compartilhamento_ativo' in fields)
+            transferred = previous_owner is not None and previous_owner != self.responsavel_id and (fields is None or {'responsavel', 'responsavel_id'}.intersection(fields))
+            if disabled or transferred:
+                LinkDispositivo.objects.using(using).filter(
+                    dispositivo__pessoa_id=self.pk, utilizado_em__isnull=True, revogado_em__isnull=True,
+                ).update(revogado_em=timezone.now())
+
 
 class Dispositivo(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -32,6 +48,21 @@ class Dispositivo(models.Model):
 
     def __str__(self):
         return f"{self.nome} — {self.pessoa.nome}"
+
+    def save(self, *args, **kwargs):
+        using = kwargs.get('using') or router.db_for_write(type(self), instance=self)
+        fields = kwargs.get('update_fields')
+        with transaction.atomic(using=using):
+            previous_person = None
+            if not self._state.adding:
+                previous_person = type(self).objects.using(using).select_for_update().filter(pk=self.pk).values_list('pessoa_id', flat=True).first()
+            super().save(*args, **kwargs)
+            disabled = not self.ativo and (fields is None or 'ativo' in fields)
+            transferred = previous_person is not None and previous_person != self.pessoa_id and (fields is None or {'pessoa', 'pessoa_id'}.intersection(fields))
+            if disabled or transferred:
+                LinkDispositivo.objects.using(using).filter(
+                    dispositivo_id=self.pk, utilizado_em__isnull=True, revogado_em__isnull=True,
+                ).update(revogado_em=timezone.now())
 
 
 class Localizacao(models.Model):
