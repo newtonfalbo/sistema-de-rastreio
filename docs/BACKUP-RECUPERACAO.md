@@ -4,6 +4,16 @@
 
 Há cópias privadas anteriores às migrações desta sessão. Dois arquivos passaram na verificação de integridade, referências e presença de tabelas em 26/09/2026. Não foi restaurado nenhum banco real sobre a instalação em uso. Não há agendamento de backup, prazo de retenção definido ou garantia de recuperação completa.
 
+Foi concluído um **ensaio funcional com dados inteiramente fictícios**, em processos e pastas temporárias: migrações, cadastro de duas contas, posição com registro de autorização, backup, restauração em outro banco, invalidação de acessos restaurados, novo login e conferência de isolamento entre contas. A origem e o backup permaneceram byte a byte iguais após a validação da cópia restaurada. Isso não substitui o ensaio privado de recuperação da instalação real, de suas chaves e do ambiente de destino.
+
+Para repetir esse ensaio isolado:
+
+```powershell
+.\.venv\Scripts\python.exe manage.py test tests.test_restauracao
+```
+
+O teste gera credenciais fictícias temporárias e não abre servidor HTTP ou túnel. Não recebe o caminho de um banco real e não executa suas exclusões de credenciais sobre a instalação em uso.
+
 ## O que preservar
 
 - Banco SQLite consistente, incluindo cadastros, hashes de senha, tokens, sessões e histórico. O backup deve receber proteção equivalente à dos dados originais.
