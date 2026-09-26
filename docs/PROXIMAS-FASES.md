@@ -29,4 +29,6 @@ Antes de implementar, decidir com o usuário:
 5. Permissões, aviso de privacidade, autorizações, retenção e controles para interromper a coleta.
 6. Testes de precisão, consumo de bateria, conectividade, atualização e desinstalação nos aparelhos escolhidos.
 
+O endereço de instalação/serviço precisa de estratégia estável. Em 26/09, o provedor deixou de reconhecer o túnel temporário de teste e foi necessário gerar outro endereço; QR codes antigos deixaram de servir. Não usar esse endereço efêmero como base de uma distribuição permanente do aplicativo.
+
 O QR Code/link atual serve para abrir uma página de envio pontual; ainda não instala aplicativo. O futuro fluxo de instalação e o vínculo do aparelho deverão ser especificados separadamente dos links temporários de envio existentes. Nenhuma conta de loja, assinatura, certificado de distribuição ou aplicativo foi criado nesta etapa.
