@@ -14,8 +14,6 @@ import qrcode.image.svg
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import get_user_model
-from django.db import transaction
 from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -24,9 +22,11 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
-from .models import Dispositivo, LinkDispositivo, Pessoa
+from .models import Dispositivo, LinkDispositivo
 from .serializers import LocalizacaoSerializer
 from .autorizacao import aviso_envio
+from .servicos import AutorizacaoAlterada, dispositivo_para_escrita
+from rest_framework.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -59,18 +59,11 @@ def links_validos():
     )
 
 
-def emitir_link(dispositivo):
+def emitir_link(dispositivo, responsavel_id=None):
     token = secrets.token_urlsafe(32)
-    with transaction.atomic():
-        # Recarregar o estado dentro da transação: o objeto recebido pode estar antigo.
-        reference = Dispositivo.objects.get(pk=dispositivo.pk)
-        owner_id = Pessoa.objects.values_list('responsavel_id', flat=True).get(pk=reference.pessoa_id)
-        owner = get_user_model().objects.select_for_update().get(pk=owner_id)
-        person = Pessoa.objects.select_for_update().get(pk=reference.pessoa_id)
-        dispositivo = Dispositivo.objects.select_for_update().get(pk=dispositivo.pk)
-        if (not owner.is_active or not person.compartilhamento_ativo or not dispositivo.ativo
-                or person.responsavel_id != owner.pk or dispositivo.pessoa_id != person.pk):
-            raise ValueError('O vínculo ou a autorização mudou. Confira o cadastro antes de gerar outro link.')
+    if responsavel_id is None:
+        responsavel_id = dispositivo.pessoa.responsavel_id
+    with dispositivo_para_escrita(dispositivo.pk, responsavel_id) as dispositivo:
         LinkDispositivo.objects.filter(dispositivo=dispositivo, utilizado_em__isnull=True, revogado_em__isnull=True).update(revogado_em=timezone.now())
         link = LinkDispositivo.objects.create(dispositivo=dispositivo, token_hash=hashlib.sha256(token.encode()).hexdigest(), expira_em=timezone.now()+timedelta(minutes=30))
     return link, token
@@ -86,8 +79,8 @@ def gerar_link(request, dispositivo_id):
         messages.error(request, 'Ative o dispositivo e o compartilhamento e confirme que o endereço HTTPS de teste está configurado.')
         return redirect(f"{reverse('painel')}?pessoa={dispositivo.pessoa_id}")
     try:
-        link, token = emitir_link(dispositivo)
-    except (ValueError, Dispositivo.DoesNotExist, Pessoa.DoesNotExist, get_user_model().DoesNotExist):
+        link, token = emitir_link(dispositivo, responsavel_id=request.user.pk)
+    except AutorizacaoAlterada:
         messages.error(request, 'O cadastro mudou. Confira dispositivo e compartilhamento antes de gerar outro link.')
         return redirect('painel')
     url = f'{origin}/celular/#{token}'
@@ -101,7 +94,11 @@ def gerar_link(request, dispositivo_id):
 @require_POST
 def revogar_links(request, dispositivo_id):
     dispositivo = get_object_or_404(Dispositivo, pk=dispositivo_id, pessoa__responsavel=request.user)
-    LinkDispositivo.objects.filter(dispositivo=dispositivo, utilizado_em__isnull=True, revogado_em__isnull=True).update(revogado_em=timezone.now())
+    try:
+        with dispositivo_para_escrita(dispositivo.pk, request.user.pk, exigir_envio=False):
+            LinkDispositivo.objects.filter(dispositivo=dispositivo, utilizado_em__isnull=True, revogado_em__isnull=True).update(revogado_em=timezone.now())
+    except AutorizacaoAlterada:
+        raise Http404('Dispositivo não encontrado.') from None
     messages.success(request, 'Links pendentes deste dispositivo foram revogados.')
     return redirect(f"{reverse('painel')}?pessoa={dispositivo.pessoa_id}")
 
@@ -153,11 +150,14 @@ def enviar_posicao(request):
     serializer = LocalizacaoSerializer(data=data, context={'request': SimpleNamespace(user=link.dispositivo.pessoa.responsavel), 'canal_envio': 'link'})
     if not serializer.is_valid():
         return JsonResponse({'detail': 'Envio inválido. Confira os dados; se a página estiver antiga, reabra o link para ler o aviso atual.', 'errors': serializer.errors}, status=400)
-    with transaction.atomic():
-        # Uma atualização condicional consome o link: envios concorrentes não duplicam a posição.
-        if links_validos().filter(pk=link.pk).update(utilizado_em=timezone.now()) != 1:
-            return indisponivel()
-        serializer.save()
+    try:
+        with dispositivo_para_escrita(link.dispositivo_id, link.dispositivo.pessoa.responsavel_id):
+            # O link só é consumido após bloquear/revalidar o vínculo; a gravação é atômica.
+            if links_validos().filter(pk=link.pk).update(utilizado_em=timezone.now()) != 1:
+                return indisponivel()
+            serializer.save()
+    except (AutorizacaoAlterada, ValidationError):
+        return indisponivel()
     return JsonResponse({'detail': 'Posição registrada. Este link já foi utilizado.'}, status=201)
 
 

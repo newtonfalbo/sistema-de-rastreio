@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from .models import Dispositivo, Localizacao, Pessoa
 from .autorizacao import AVISO_TEXTO, AVISO_VERSAO
+from .servicos import AutorizacaoAlterada, dispositivo_para_escrita, pessoa_para_escrita, responsavel_para_escrita
 
 
 class PessoaSerializer(serializers.ModelSerializer):
@@ -14,12 +15,50 @@ class PessoaSerializer(serializers.ModelSerializer):
         fields = ["id", "nome", "descricao", "compartilhamento_ativo", "criado_em"]
         read_only_fields = ["id", "criado_em"]
 
+    def create(self, validated_data):
+        try:
+            with responsavel_para_escrita(self.context['request'].user.pk) as owner:
+                validated_data['responsavel'] = owner
+                return super().create(validated_data)
+        except AutorizacaoAlterada:
+            raise serializers.ValidationError('Conta ou autorização alteradas. Entre novamente.') from None
+
+    def update(self, instance, validated_data):
+        try:
+            with pessoa_para_escrita(instance.pk, self.context['request'].user.pk) as current:
+                for name, value in validated_data.items():
+                    setattr(current, name, value)
+                current.save(update_fields=list(validated_data))
+                return current
+        except AutorizacaoAlterada:
+            raise serializers.ValidationError('Cadastro ou autorização alterados. Atualize a página.') from None
+
 
 class DispositivoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dispositivo
         fields = ["id", "pessoa", "nome", "ativo", "criado_em"]
         read_only_fields = ["id", "criado_em"]
+
+    def create(self, validated_data):
+        try:
+            with pessoa_para_escrita(validated_data['pessoa'].pk, self.context['request'].user.pk) as current:
+                validated_data['pessoa'] = current
+                return super().create(validated_data)
+        except AutorizacaoAlterada:
+            raise serializers.ValidationError('Cadastro ou autorização alterados. Atualize a página.') from None
+
+    def update(self, instance, validated_data):
+        try:
+            with dispositivo_para_escrita(instance.pk, self.context['request'].user.pk, exigir_envio=False) as current:
+                if 'pessoa' in validated_data and validated_data['pessoa'].pk != current.pessoa_id:
+                    raise serializers.ValidationError('O vínculo mudou. Não é permitido transferir um dispositivo.')
+                for name, value in validated_data.items():
+                    setattr(current, name, value)
+                current.save(update_fields=list(validated_data))
+                return current
+        except AutorizacaoAlterada:
+            raise serializers.ValidationError('Cadastro ou autorização alterados. Atualize a página.') from None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,11 +88,15 @@ class LocalizacaoSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('autorizado')
         validated_data.pop('aviso_versao')
-        validated_data.update(
-            autorizacao_versao=AVISO_VERSAO, autorizacao_texto=AVISO_TEXTO,
-            autorizacao_recebida_em=timezone.now(), canal_envio=self.context.get('canal_envio', 'api'),
-        )
-        return super().create(validated_data)
+        try:
+            with dispositivo_para_escrita(validated_data['dispositivo'].pk, self.context['request'].user.pk) as current:
+                validated_data.update(
+                    dispositivo=current, autorizacao_versao=AVISO_VERSAO, autorizacao_texto=AVISO_TEXTO,
+                    autorizacao_recebida_em=timezone.now(), canal_envio=self.context.get('canal_envio', 'api'),
+                )
+                return super().create(validated_data)
+        except AutorizacaoAlterada:
+            raise serializers.ValidationError({'dispositivo': 'Cadastro ou compartilhamento alterados. Confira antes de enviar novamente.'}) from None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

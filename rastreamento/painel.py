@@ -16,6 +16,7 @@ from .forms import DispositivoForm, PessoaForm
 from .celular import public_origin
 from .models import Dispositivo, Localizacao, Pessoa
 from .autorizacao import aviso_envio
+from .servicos import AutorizacaoAlterada, pessoa_para_escrita, responsavel_para_escrita
 
 
 def pessoa_do_usuario(user, identificador):
@@ -59,8 +60,12 @@ def cadastrar_pessoa(request):
     form = PessoaForm(request.POST)
     if form.is_valid():
         pessoa = form.save(commit=False)
-        pessoa.responsavel = request.user
-        pessoa.save()
+        try:
+            with responsavel_para_escrita(request.user.pk) as owner:
+                pessoa.responsavel = owner
+                pessoa.save()
+        except AutorizacaoAlterada:
+            return redirect('login')
         messages.success(request, 'Pessoa cadastrada. O compartilhamento começa desativado.')
         return redirect(f"{reverse('painel')}?pessoa={pessoa.pk}")
     messages.error(request, 'Não foi possível cadastrar: ' + '; '.join(error for errors in form.errors.values() for error in errors))
@@ -72,7 +77,14 @@ def cadastrar_pessoa(request):
 def cadastrar_dispositivo(request):
     form = DispositivoForm(request.POST, user=request.user)
     if form.is_valid():
-        dispositivo = form.save()
+        dispositivo = form.save(commit=False)
+        try:
+            with pessoa_para_escrita(dispositivo.pessoa_id, request.user.pk) as current:
+                dispositivo.pessoa = current
+                dispositivo.save()
+        except AutorizacaoAlterada:
+            messages.error(request, 'O cadastro mudou. Atualize a página antes de cadastrar o dispositivo.')
+            return redirect('painel')
         messages.success(request, 'Dispositivo cadastrado.')
         return redirect(f"{reverse('painel')}?pessoa={dispositivo.pessoa_id}")
     messages.error(request, 'Verifique o nome e selecione uma pessoa do seu cadastro.')
@@ -87,7 +99,11 @@ def compartilhar(request, pessoa_id):
     if ativar and request.POST.get('autorizado') != 'on':
         messages.error(request, 'Confirme que o compartilhamento está autorizado antes de ativá-lo.')
     else:
-        pessoa.compartilhamento_ativo = ativar
-        pessoa.save(update_fields=['compartilhamento_ativo'])
+        try:
+            with pessoa_para_escrita(pessoa.pk, request.user.pk) as pessoa:
+                pessoa.compartilhamento_ativo = ativar
+                pessoa.save(update_fields=['compartilhamento_ativo'])
+        except AutorizacaoAlterada:
+            raise Http404('Pessoa não encontrada.') from None
         messages.success(request, 'Compartilhamento ativado. Gere um novo link se precisar enviar pelo celular.' if ativar else 'Compartilhamento desativado e links pendentes revogados. Novos envios estão bloqueados.')
     return redirect(f"{reverse('painel')}?pessoa={pessoa.pk}")

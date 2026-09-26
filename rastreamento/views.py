@@ -3,10 +3,12 @@ from rest_framework.decorators import action
 from rest_framework.decorators import api_view
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
 
 from .models import Dispositivo, Localizacao, Pessoa
 from .serializers import DispositivoSerializer, FiltrosLocalizacaoSerializer, LocalizacaoSerializer, PessoaSerializer
 from .autorizacao import aviso_envio
+from .servicos import AutorizacaoAlterada, dispositivo_para_escrita, pessoa_para_escrita
 
 
 @api_view(['GET'])
@@ -23,6 +25,13 @@ class PessoaViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(responsavel=self.request.user)
 
+    def perform_destroy(self, instance):
+        try:
+            with pessoa_para_escrita(instance.pk, self.request.user.pk) as current:
+                current.delete()
+        except AutorizacaoAlterada:
+            raise NotFound('Cadastro não encontrado.') from None
+
     @action(detail=True, methods=["get"], url_path="ultima-localizacao")
     def ultima_localizacao(self, request, pk=None):
         pessoa = self.get_object()
@@ -37,6 +46,13 @@ class DispositivoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Dispositivo.objects.select_related("pessoa").filter(pessoa__responsavel=self.request.user)
+
+    def perform_destroy(self, instance):
+        try:
+            with dispositivo_para_escrita(instance.pk, self.request.user.pk, exigir_envio=False) as current:
+                current.delete()
+        except AutorizacaoAlterada:
+            raise NotFound('Cadastro não encontrado.') from None
 
 
 class LocalizacaoViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
