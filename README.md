@@ -87,6 +87,8 @@ Desativar o dispositivo ou o compartilhamento da pessoa bloqueia novas posiçõe
 
 Desativar também revoga permanentemente os links pendentes. Reativar não recupera esses links: gere outro. A migração `0004` invalida uma vez os links pendentes anteriores à correção; posições e links usados são preservados. Para rotinas administrativas, use os métodos de salvamento do aplicativo e transações; atualizações SQL diretas ignoram essas regras.
 
+Desativar a conta pela administração também remove seu token de API. Depois de reativá-la, a integração precisa de um token novo. A migração `0005` remove tokens de contas já inativas, preservando os de contas ativas; ela não restaura credenciais ao ser revertida. Esse controle não equivale à invalidação de todas as sessões de navegador.
+
 **Exclusão:** apagar uma pessoa remove seus dispositivos e suas localizações; apagar um dispositivo remove seu histórico. Não há lixeira. Registros individuais de localização não podem ser alterados ou apagados pela API. Dispositivos não podem ser transferidos entre pessoas; cadastre outro dispositivo.
 
 ## Testes e validação

@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
 from rest_framework.test import APIClient
+from rest_framework.authtoken.models import Token
 
 from rastreamento.celular import emitir_link
 from rastreamento.models import Dispositivo, LinkDispositivo, Pessoa
@@ -41,6 +42,41 @@ class RevogacaoTests(TestCase):
         self.user.is_active = True
         self.user.save(update_fields=['is_active'])
         self.assertEqual(self.verify_old().status_code, 410)
+
+    def test_account_reactivation_does_not_restore_api_token(self):
+        old = Token.objects.create(user=self.user)
+        api = APIClient()
+        api.credentials(HTTP_AUTHORIZATION=f'Token {old.key}')
+        self.assertEqual(api.get('/api/pessoas/').status_code, 200)
+        self.user.is_active = False
+        self.user.save(update_fields=['is_active'])
+        self.user.is_active = True
+        self.user.save(update_fields=['is_active'])
+        self.assertEqual(api.get('/api/pessoas/').status_code, 401)
+        self.assertFalse(Token.objects.filter(user=self.user).exists())
+        new = Token.objects.create(user=self.user)
+        api.credentials(HTTP_AUTHORIZATION=f'Token {new.key}')
+        self.assertEqual(api.get('/api/pessoas/').status_code, 200)
+
+    def test_partial_account_edit_preserves_api_token(self):
+        token = Token.objects.create(user=self.user)
+        self.user.is_active = False
+        self.user.first_name = 'Nome ficticio'
+        self.user.save(update_fields=['first_name'])
+        self.assertTrue(Token.objects.filter(pk=token.pk).exists())
+
+    def test_upgrade_revokes_inactive_tokens_and_preserves_active_accounts(self):
+        from importlib import import_module
+        from types import SimpleNamespace
+        from django.apps import apps
+        active = Token.objects.create(user=self.user)
+        inactive_user = get_user_model().objects.create_user(username='inativo_ficticio', is_active=False)
+        inactive = Token.objects.create(user=inactive_user)
+        migration = import_module('rastreamento.migrations.0005_revogar_tokens_contas_inativas')
+        migration.revogar_tokens_inativos(apps, SimpleNamespace(connection=SimpleNamespace(alias='default')))
+        self.assertTrue(Token.objects.filter(pk=active.pk).exists())
+        self.assertFalse(Token.objects.filter(pk=inactive.pk).exists())
+        self.assertTrue(get_user_model().objects.filter(pk=inactive_user.pk).exists())
 
     def test_api_disabling_person_revokes_pending_link(self):
         api = APIClient()

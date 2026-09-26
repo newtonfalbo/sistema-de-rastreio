@@ -1,8 +1,10 @@
-"""Invalida links quando uma conta é desativada pela administração Django."""
+"""Invalida links e token de API quando uma conta é desativada."""
 from django.conf import settings
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+from rest_framework.authtoken.models import Token
 
 from .models import LinkDispositivo
 
@@ -11,6 +13,8 @@ from .models import LinkDispositivo
 def revogar_conta_inativa(sender, instance, created, raw, using, update_fields, **kwargs):
     if raw or created or instance.is_active or (update_fields is not None and 'is_active' not in update_fields):
         return
-    LinkDispositivo.objects.using(using).filter(
-        dispositivo__pessoa__responsavel_id=instance.pk, utilizado_em__isnull=True, revogado_em__isnull=True,
-    ).update(revogado_em=timezone.now())
+    with transaction.atomic(using=using):
+        LinkDispositivo.objects.using(using).filter(
+            dispositivo__pessoa__responsavel_id=instance.pk, utilizado_em__isnull=True, revogado_em__isnull=True,
+        ).update(revogado_em=timezone.now())
+        Token.objects.using(using).filter(user_id=instance.pk).delete()
