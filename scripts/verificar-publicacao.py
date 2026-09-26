@@ -1,7 +1,8 @@
 """Verifica o índice Git sem imprimir segredos. Execute antes de cada commit."""
 import re
+import os
 import subprocess
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 
 SECRET_PATTERNS = (
@@ -23,12 +24,39 @@ def inspect_blob(path, data):
         problems.append('arquivo potencialmente privado')
     if data.startswith(b'SQLite format 3\x00'):
         problems.append('banco SQLite, independentemente da extensão')
-    if any(re.search(pattern, data) for pattern in SECRET_PATTERNS):
+    if any(re.search(pattern, data) or re.search(pattern, path.encode('utf-8')) for pattern in SECRET_PATTERNS):
         problems.append('possível credencial ou endereço temporário')
     return problems
 
 
+def known_private_values(root):
+    root = Path(root).resolve()
+    data_root = Path(os.environ.get('RASTREIO_DATA_DIR', str(root))).expanduser()
+    if not data_root.is_absolute():
+        raise ValueError('Diretório de dados inválido.')
+    values = []
+    for path in [data_root / '.local' / 'django-secret.key', root / '.local' / 'mobile-origin.txt']:
+        try:
+            value = path.read_bytes().removeprefix(b'\xef\xbb\xbf').strip()
+        except FileNotFoundError:
+            continue
+        if value:
+            values.append(value)
+    environment_key = os.environ.get('DJANGO_SECRET_KEY', '')
+    if len(environment_key) >= 32:
+        values.append(environment_key.encode('utf-8'))
+    return values
+
+
+def safe_path_label(path, private_values):
+    encoded = path.encode('utf-8')
+    if any(re.search(pattern, encoded) for pattern in SECRET_PATTERNS) or any(value in encoded for value in private_values):
+        return '[nome omitido por conter possível segredo]'
+    return path
+
+
 def check_index(root):
+    private_values = known_private_values(root)
     entries = subprocess.check_output(['git', 'ls-files', '--stage', '-z'], cwd=root)
     problems = []
     for entry in entries.split(b'\x00'):
@@ -37,24 +65,27 @@ def check_index(root):
         metadata, raw_path = entry.split(b'\t', 1)
         mode, oid, stage = metadata.split()
         path = raw_path.decode('utf-8', errors='replace')
+        display_path = safe_path_label(path, private_values)
         if stage != b'0':
-            problems.append((path, ['conflito não resolvido']))
+            problems.append((display_path, ['conflito não resolvido']))
             continue
         if mode == b'160000':
-            problems.append((path, ['submódulo não inspecionado']))
+            problems.append((display_path, ['submódulo não inspecionado']))
             continue
         data = subprocess.check_output(['git', 'cat-file', 'blob', oid.decode('ascii')], cwd=root)
         findings = inspect_blob(path, data)
+        if any(value in data or value in raw_path for value in private_values):
+            findings.append('segredo ou endereço privado conhecido nesta instalação')
         if findings:
-            problems.append((path, findings))
+            problems.append((display_path, findings))
     return problems
 
 
 def main():
     try:
         problems = check_index('.')
-    except subprocess.CalledProcessError:
-        print('Não foi possível verificar o índice Git; publicação não validada.')
+    except (subprocess.CalledProcessError, OSError, ValueError):
+        print('Não foi possível concluir a verificação; confira Git, configuração e acesso aos arquivos privados locais.')
         return 2
     if problems:
         for path, reasons in problems:

@@ -36,6 +36,22 @@ O verificador lê os objetos do **índice Git**, incluindo arquivos já versiona
 
 Código de saída zero indica aprovação apenas pelas regras implementadas; 1 indica achado e 2 falha de execução Git. A revisão humana continua necessária para senhas arbitrárias, coordenadas, nomes, documentos, imagens e demais dados pessoais. Não há garantia de detecção completa nem inspeção automática de todo o histórico Git.
 
-O GitHub Actions também executa a verificação. **Esse passo remoto ocorre depois do envio e não impede a exposição inicial.** A verificação local antes de commit/push é indispensável. Nenhum hook foi instalado automaticamente nesta etapa.
+O GitHub Actions também executa a verificação. **Esse passo remoto ocorre depois do envio e não impede a exposição inicial.** A verificação local antes de commit/push é indispensável.
+
+## Proteção antes do commit
+
+O hook `.githooks/pre-commit` foi habilitado nesta instalação em 26/09. Ele executa o verificador antes de criar o commit, incluindo commits feitos pelo Git do VS Code. Usa o Python do ambiente virtual; em outros ambientes, pode usar `python3`, `python` ou o executável indicado por `RASTREIO_PYTHON`. Não envia conteúdo para serviços externos.
+
+Em uma nova cópia, após revisar o script e conferir se já existem hooks que precisam ser preservados:
+
+```powershell
+git config --local core.hooksPath .githooks
+```
+
+Essa configuração é local ao repositório, não é propagada automaticamente pelo clone e não modifica os hooks globais. Não substitua uma configuração existente sem integrar suas verificações. `.gitattributes` mantém o script de hook com fim de linha LF.
+
+Além dos padrões gerais, a verificação compara os arquivos preparados com a chave local conhecida, a chave fornecida pelo ambiente quando aplicável e o endereço privado do celular. As comparações ficam em memória e os valores não aparecem nas mensagens. Se um arquivo privado existente não puder ser lido, a verificação falha em vez de declarar aprovação incompleta.
+
+Hooks locais podem ser desativados ou contornados pelo próprio usuário e não detectam qualquer dado pessoal arbitrário. A proteção deve ser combinada com revisão manual e controles de acesso. Referência: [documentação de hooks do Git](https://git-scm.com/docs/githooks).
 
 Se algum segredo já tiver sido publicado, removê-lo no commit seguinte não o apaga do histórico. É necessário avaliar revogação/rotação e saneamento do histórico conforme o incidente; não foi constatado um incidente nesta implementação.
