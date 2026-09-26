@@ -2,6 +2,8 @@
 import re
 import os
 import subprocess
+import sqlite3
+from contextlib import closing
 from pathlib import Path, PurePosixPath
 
 
@@ -45,6 +47,16 @@ def known_private_values(root):
     environment_key = os.environ.get('DJANGO_SECRET_KEY', '')
     if len(environment_key) >= 32:
         values.append(environment_key.encode('utf-8'))
+    database_path = data_root / 'db.sqlite3'
+    if database_path.exists():
+        with closing(sqlite3.connect(database_path.resolve().as_uri() + '?mode=ro', uri=True)) as database:
+            database.execute('PRAGMA query_only=ON')
+            has_tokens = database.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='authtoken_token'").fetchone()
+            if has_tokens:
+                for (key,) in database.execute('SELECT key FROM authtoken_token'):
+                    if not isinstance(key, str) or not key:
+                        raise ValueError('Credencial local inválida.')
+                    values.append(key.encode('utf-8'))
     return values
 
 
@@ -84,7 +96,7 @@ def check_index(root):
 def main():
     try:
         problems = check_index('.')
-    except (subprocess.CalledProcessError, OSError, ValueError):
+    except (subprocess.CalledProcessError, OSError, ValueError, sqlite3.Error):
         print('Não foi possível concluir a verificação; confira Git, configuração e acesso aos arquivos privados locais.')
         return 2
     if problems:

@@ -3,8 +3,10 @@ import os
 import shutil
 import subprocess
 import sys
+import sqlite3
+import secrets
 import tempfile
-from contextlib import redirect_stdout
+from contextlib import chdir, closing, redirect_stdout
 from io import StringIO
 from unittest.mock import patch
 from pathlib import Path
@@ -16,6 +18,32 @@ scanner = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts' / '
 
 
 class PublicationTests(SimpleTestCase):
+    def test_known_api_token_is_blocked_without_modifying_database(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            token = secrets.token_hex(20)
+            database_path = root / 'db.sqlite3'
+            with closing(sqlite3.connect(database_path)) as database, database:
+                database.execute('CREATE TABLE authtoken_token (key TEXT)')
+                database.execute('INSERT INTO authtoken_token VALUES (?)', [token])
+            original = database_path.read_bytes()
+            subprocess.run(['git', 'init', '-q', directory], check=True)
+            (root / 'notes.txt').write_text(token, encoding='utf-8')
+            subprocess.run(['git', 'add', 'notes.txt'], cwd=directory, check=True)
+            with patch.dict(os.environ, {'RASTREIO_DATA_DIR': directory}):
+                findings = scanner['check_index'](directory)
+            self.assertTrue(findings)
+            self.assertNotIn(token, str(findings))
+            self.assertEqual(database_path.read_bytes(), original)
+
+    def test_invalid_local_database_prevents_approval(self):
+        with tempfile.TemporaryDirectory() as directory:
+            (Path(directory) / 'db.sqlite3').write_bytes(b'invalid database')
+            output = StringIO()
+            with chdir(directory), patch.dict(os.environ, {'RASTREIO_DATA_DIR': directory}), redirect_stdout(output):
+                self.assertEqual(scanner['main'](), 2)
+            self.assertNotIn('invalid database', output.getvalue())
+
     def test_secret_in_filename_is_detected_and_omitted_from_label(self):
         secret = 'gh' + 'p_' + 'X' * 36
         path = 'notes-' + secret + '.txt'

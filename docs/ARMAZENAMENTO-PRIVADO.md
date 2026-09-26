@@ -54,6 +54,8 @@ Essa configuração é local ao repositório, não é propagada automaticamente 
 
 Além dos padrões gerais, a verificação compara os arquivos preparados com a chave local conhecida, a chave fornecida pelo ambiente quando aplicável e o endereço privado do celular. As comparações ficam em memória e os valores não aparecem nas mensagens. Se um arquivo privado existente não puder ser lido, a verificação falha em vez de declarar aprovação incompleta.
 
+Também consulta, em modo somente leitura, tokens da API existentes no banco local configurado. Um token copiado para texto ou nome de arquivo é bloqueado quando corresponde ao valor conhecido. Banco ausente ou sem tabela de tokens não fornece valores adicionais; banco inválido ou inacessível torna a verificação inconclusiva. Tokens antigos, codificados ou de outra instalação podem não ser reconhecidos. O banco nunca é enviado ao GitHub para essa comparação.
+
 Hooks locais podem ser desativados ou contornados pelo próprio usuário e não detectam qualquer dado pessoal arbitrário. A proteção deve ser combinada com revisão manual e controles de acesso. Referência: [documentação de hooks do Git](https://git-scm.com/docs/githooks).
 
 Se algum segredo já tiver sido publicado, removê-lo no commit seguinte não o apaga do histórico. É necessário avaliar revogação/rotação e saneamento do histórico conforme o incidente; não foi constatado um incidente nesta implementação.
