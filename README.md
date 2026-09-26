@@ -68,6 +68,8 @@ Exemplo de corpo JSON para uma localização (substitua o UUID e a data):
 ```json
 {
   "dispositivo": "UUID_DO_DISPOSITIVO",
+  "autorizado": true,
+  "aviso_versao": "2026-09-26.1",
   "latitude": "-3.7319000",
   "longitude": "-38.5267000",
   "precisao_metros": 12.0,
@@ -76,6 +78,10 @@ Exemplo de corpo JSON para uma localização (substitua o UUID e a data):
 ```
 
 Latitude aceita -90 a 90 e longitude -180 a 180, com até sete casas decimais. A precisão é opcional e não negativa. Capturas mais de cinco minutos no futuro são rejeitadas. O servidor registra `recebido_em` separadamente.
+
+Antes de enviar, consulte o aviso atual em `GET /api/aviso-envio/` com autenticação e apresente seu texto ao participante. `autorizado` e `aviso_versao` são obrigatórios nos novos envios. Uma versão antiga é recusada sem gravar posição ou consumir o link móvel. O cliente não pode definir o texto, horário ou canal registrados pelo servidor. Integrações anteriores precisam incluir esses campos após atualizar o fluxo de autorização.
+
+Cada novo registro inclui versão e texto do aviso, horário de recebimento da confirmação e canal (sessão, API ou link). O histórico permite consultar esses detalhes. Registros anteriores permanecem sem essa evidência; nenhuma autorização é criada retroativamente. O registro técnico não comprova sozinho a identidade do titular nem a validade jurídica do consentimento. A ativação do compartilhamento pelo responsável continua sendo uma ação operacional distinta.
 
 Desativar o dispositivo ou o compartilhamento da pessoa bloqueia novas posições; o histórico já armazenado continua acessível ao responsável. A última posição pode ser antiga: sempre confira `capturado_em`. O indicador de compartilhamento é um controle operacional, não um registro completo de consentimento.
 

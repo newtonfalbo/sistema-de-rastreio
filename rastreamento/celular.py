@@ -25,6 +25,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .models import Dispositivo, LinkDispositivo
 from .serializers import LocalizacaoSerializer
+from .autorizacao import aviso_envio
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,7 @@ def revogar_links(request, dispositivo_id):
 @ensure_csrf_cookie
 @require_GET
 def pagina_celular(request):
-    response = render(request, 'rastreamento/celular.html')
+    response = render(request, 'rastreamento/celular.html', {'aviso_envio': aviso_envio()})
     response['Content-Security-Policy'] = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
     return response
 
@@ -134,11 +135,11 @@ def enviar_posicao(request):
         return JsonResponse({'detail': 'Autorize o envio pontual antes de continuar.'}, status=400)
     if 'dispositivo' in payload or 'pessoa' in payload:
         return JsonResponse({'detail': 'O vínculo do dispositivo é definido exclusivamente pelo link.'}, status=400)
-    data = {name: payload.get(name) for name in ['latitude', 'longitude', 'precisao_metros', 'capturado_em']}
+    data = {name: payload.get(name) for name in ['latitude', 'longitude', 'precisao_metros', 'capturado_em', 'autorizado', 'aviso_versao']}
     data['dispositivo'] = str(link.dispositivo_id)
-    serializer = LocalizacaoSerializer(data=data, context={'request': SimpleNamespace(user=link.dispositivo.pessoa.responsavel)})
+    serializer = LocalizacaoSerializer(data=data, context={'request': SimpleNamespace(user=link.dispositivo.pessoa.responsavel), 'canal_envio': 'link'})
     if not serializer.is_valid():
-        return JsonResponse({'detail': 'Coordenadas ou data inválidas.', 'errors': serializer.errors}, status=400)
+        return JsonResponse({'detail': 'Envio inválido. Confira os dados; se a página estiver antiga, reabra o link para ler o aviso atual.', 'errors': serializer.errors}, status=400)
     with transaction.atomic():
         # Uma atualização condicional consome o link: envios concorrentes não duplicam a posição.
         if links_validos().filter(pk=link.pk).update(utilizado_em=timezone.now()) != 1:

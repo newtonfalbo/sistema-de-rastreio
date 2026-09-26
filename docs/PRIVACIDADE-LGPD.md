@@ -16,7 +16,7 @@ Este documento registra requisitos de produto e pontos para revisão jurídica. 
 | Finalidade e base legal | Documentar finalidade específica, necessidade, dados coletados e hipótese legal adequada a cada operação. Consentimento é uma das bases legais; não é solução automática para todo uso. Pendente de definição do caso de uso e revisão jurídica. |
 | Responsáveis | Identificar controlador, operadores, contatos e responsabilidades. O responsável cadastrado de uma pessoa no código não equivale automaticamente ao controlador definido pela LGPD. Pendente. |
 | Transparência | Publicar aviso claro com identificação do controlador, finalidade, dados, duração, destinatários e canal de atendimento. Há explicação pontual na tela de envio, mas ainda não há aviso completo de privacidade. |
-| Consentimento, quando aplicável | Garantir manifestação livre, informada, específica e demonstrável; registrar versão do aviso, finalidade, manifestação e possibilidade de revogação. O checkbox atual e a permissão do navegador não constituem, sozinhos, implementação completa desse requisito. |
+| Consentimento, quando aplicável | Garantir manifestação livre, informada, específica e demonstrável. Novos envios registram versão/texto do aviso, horário no servidor e canal; versões antigas são recusadas. Ainda faltam identificação e contato do controlador, avaliação da hipótese legal e procedimentos completos de revogação/direitos. O registro técnico e a permissão do navegador não constituem, sozinhos, implementação completa desse requisito. |
 | Minimização | Limitar nome/identificação, dispositivo, coordenadas, precisão e datas ao necessário; evitar CPF, documentos, dados de saúde e localização contínua sem necessidade demonstrada. A coleta atual é pontual. |
 | Direitos do titular | Disponibilizar canal e procedimentos de confirmação, acesso, correção, informações sobre compartilhamento, revogação e eliminação nas condições legais. A exclusão pelo responsável na API não substitui um fluxo de direitos do titular. Pendente. |
 | Retenção | Definir prazos para posições, tokens, tentativas de login, logs e backups; implementar limpeza e registrar exceções legais. A validade do link não apaga automaticamente o histórico. Pendente. |
@@ -35,7 +35,7 @@ Autenticação; isolamento por responsável; compartilhamento desativado por pad
 ## Limites conhecidos
 
 - Possuir o link não comprova a identidade do aparelho ou da pessoa. Coordenadas podem ser falsificadas pelo cliente.
-- Ainda não há trilha completa de autorização com versão de aviso e finalidade, política automatizada de retenção, canal para direitos ou plano de incidentes.
+- Há evidência versionada da autorização de novos envios, mas não uma trilha completa de todas as operações nem prova da identidade do titular. Registros anteriores não recebem evidência retroativa. Ainda faltam política automatizada de retenção, canal para direitos e plano de incidentes.
 - O banco e arquivos privados ficam fora do Git, mas a pasta local está em área do OneDrive. A configuração de sincronização precisa ser avaliada; não foi modificada nesta etapa.
 - O teste HTTPS temporário não equivale a uma implantação regularizada nem a auditoria de segurança.
 

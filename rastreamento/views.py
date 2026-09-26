@@ -1,9 +1,17 @@
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.decorators import api_view
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 
 from .models import Dispositivo, Localizacao, Pessoa
 from .serializers import DispositivoSerializer, FiltrosLocalizacaoSerializer, LocalizacaoSerializer, PessoaSerializer
+from .autorizacao import aviso_envio
+
+
+@api_view(['GET'])
+def consultar_aviso_envio(request):
+    return Response(aviso_envio())
 
 
 class PessoaViewSet(viewsets.ModelViewSet):
@@ -33,6 +41,11 @@ class DispositivoViewSet(viewsets.ModelViewSet):
 
 class LocalizacaoViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = LocalizacaoSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['canal_envio'] = 'sessao' if isinstance(self.request.successful_authenticator, SessionAuthentication) else 'api'
+        return context
 
     def get_queryset(self):
         queryset = Localizacao.objects.select_related("dispositivo__pessoa").filter(dispositivo__pessoa__responsavel=self.request.user)

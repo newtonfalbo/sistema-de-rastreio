@@ -3,7 +3,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rastreamento import painel, celular
-from rastreamento.views import DispositivoViewSet, LocalizacaoViewSet, PessoaViewSet
+from rastreamento.views import DispositivoViewSet, LocalizacaoViewSet, PessoaViewSet, consultar_aviso_envio
 
 router = DefaultRouter()
 router.register('pessoas', PessoaViewSet, basename='pessoa')
@@ -20,6 +20,7 @@ urlpatterns = [
     path('painel/dispositivos/', painel.cadastrar_dispositivo, name='cadastrar-dispositivo'),
     path('painel/pessoas/<uuid:pessoa_id>/compartilhamento/', painel.compartilhar, name='compartilhar'),
     path('admin/', admin.site.urls),
+    path('api/aviso-envio/', consultar_aviso_envio, name='aviso-envio'),
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls')),
 ]

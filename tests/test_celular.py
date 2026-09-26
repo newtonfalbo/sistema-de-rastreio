@@ -1,4 +1,5 @@
-﻿import hashlib
+from rastreamento.autorizacao import AVISO_VERSAO
+import hashlib
 import json
 from datetime import timedelta
 from unittest.mock import patch
@@ -26,7 +27,7 @@ class LinkCelularTests(TestCase):
         return self.client.post(f'/celular/{action}/', {'token': self.token, **extra}, content_type='application/json')
 
     def posicao(self, **extra):
-        data = dict(autorizado=True, latitude='-3.73', longitude='-38.52', capturado_em=timezone.now().isoformat())
+        data = dict(autorizado=True, aviso_versao=AVISO_VERSAO, latitude='-3.73', longitude='-38.52', capturado_em=timezone.now().isoformat())
         data.update(extra)
         return self.post('enviar', **data)
 

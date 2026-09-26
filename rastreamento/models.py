@@ -42,6 +42,13 @@ class Localizacao(models.Model):
     precisao_metros = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0)])
     capturado_em = models.DateTimeField()
     recebido_em = models.DateTimeField(auto_now_add=True)
+    autorizacao_versao = models.CharField(max_length=32, blank=True, default='')
+    autorizacao_texto = models.TextField(blank=True, default='')
+    autorizacao_recebida_em = models.DateTimeField(null=True, blank=True)
+    canal_envio = models.CharField(max_length=16, default='legado', choices=[
+        ('legado', 'Sem registro de autorização'), ('api', 'API autenticada'),
+        ('sessao', 'Sessão autenticada'), ('link', 'Link temporário'),
+    ])
 
     class Meta:
         ordering = ["-capturado_em", "-recebido_em", "-id"]

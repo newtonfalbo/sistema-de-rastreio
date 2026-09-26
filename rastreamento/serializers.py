@@ -5,6 +5,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from .models import Dispositivo, Localizacao, Pessoa
+from .autorizacao import AVISO_TEXTO, AVISO_VERSAO
 
 
 class PessoaSerializer(serializers.ModelSerializer):
@@ -31,10 +32,28 @@ class DispositivoSerializer(serializers.ModelSerializer):
 
 
 class LocalizacaoSerializer(serializers.ModelSerializer):
+    autorizado = serializers.BooleanField(write_only=True, required=True)
+    aviso_versao = serializers.ChoiceField(choices=[AVISO_VERSAO], write_only=True, required=True)
+
     class Meta:
         model = Localizacao
-        fields = ["id", "dispositivo", "latitude", "longitude", "precisao_metros", "capturado_em", "recebido_em"]
-        read_only_fields = ["id", "recebido_em"]
+        fields = ["id", "dispositivo", "latitude", "longitude", "precisao_metros", "capturado_em", "recebido_em",
+                  "autorizado", "aviso_versao", "autorizacao_versao", "autorizacao_texto", "autorizacao_recebida_em", "canal_envio"]
+        read_only_fields = ["id", "recebido_em", "autorizacao_versao", "autorizacao_texto", "autorizacao_recebida_em", "canal_envio"]
+
+    def validate_autorizado(self, value):
+        if not value:
+            raise serializers.ValidationError('Confirme a autorização do envio pontual.')
+        return value
+
+    def create(self, validated_data):
+        validated_data.pop('autorizado')
+        validated_data.pop('aviso_versao')
+        validated_data.update(
+            autorizacao_versao=AVISO_VERSAO, autorizacao_texto=AVISO_TEXTO,
+            autorizacao_recebida_em=timezone.now(), canal_envio=self.context.get('canal_envio', 'api'),
+        )
+        return super().create(validated_data)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

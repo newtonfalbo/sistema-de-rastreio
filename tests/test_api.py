@@ -1,3 +1,4 @@
+from rastreamento.autorizacao import AVISO_VERSAO
 from datetime import timedelta
 from decimal import Decimal
 
@@ -28,7 +29,7 @@ class RastreioAPITests(APITestCase):
         self.client.force_authenticate(self.usuario)
 
     def payload(self, **overrides):
-        data = {'dispositivo': str(self.dispositivo.pk), 'latitude': '-3.7319000',
+        data = {'autorizado': True, 'aviso_versao': AVISO_VERSAO, 'dispositivo': str(self.dispositivo.pk), 'latitude': '-3.7319000',
                 'longitude': '-38.5267000', 'precisao_metros': 12.0,
                 'capturado_em': timezone.now().isoformat()}
         data.update(overrides)

@@ -18,10 +18,11 @@
     status.textContent = "Aguardando sua permissão e a localização do navegador…";
     try {
       const position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}));
+      if (!document.getElementById("capture-consent").checked || document.getElementById("capture-device").value !== device) throw new Error("Autorização ou dispositivo alterado. Nenhuma posição foi enviada.");
       const response = await fetch("/api/localizacoes/", {
         method: "POST", credentials: "same-origin",
         headers: {"Content-Type": "application/json", "X-CSRFToken": form.querySelector('[name="csrfmiddlewaretoken"]').value},
-        body: JSON.stringify({dispositivo: device, latitude: position.coords.latitude.toFixed(7), longitude: position.coords.longitude.toFixed(7), precisao_metros: position.coords.accuracy, capturado_em: new Date(position.timestamp).toISOString()}),
+        body: JSON.stringify({autorizado: true, aviso_versao: document.getElementById("capture-aviso").value, dispositivo: device, latitude: position.coords.latitude.toFixed(7), longitude: position.coords.longitude.toFixed(7), precisao_metros: position.coords.accuracy, capturado_em: new Date(position.timestamp).toISOString()}),
       });
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) throw new Error("Sua sessão expirou ou o envio não foi autorizado. Entre novamente e confira o compartilhamento.");

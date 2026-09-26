@@ -32,7 +32,7 @@
     try {
       const position = await new Promise((resolve,reject) => navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,maximumAge:0,timeout:20000}));
       if (!consent.checked) throw new Error("Autorização retirada. Nenhuma posição foi enviada.");
-      const result = await post("/celular/enviar/", {autorizado:true,latitude:position.coords.latitude.toFixed(7),longitude:position.coords.longitude.toFixed(7),precisao_metros:position.coords.accuracy,capturado_em:new Date(position.timestamp).toISOString()});
+      const result = await post("/celular/enviar/", {autorizado:true,aviso_versao:document.getElementById("aviso-versao").value,latitude:position.coords.latitude.toFixed(7),longitude:position.coords.longitude.toFixed(7),precisao_metros:position.coords.accuracy,capturado_em:new Date(position.timestamp).toISOString()});
       token = "";section.hidden = true;status.textContent = result.detail + " Você pode fechar esta página.";
     } catch (error) {
       const errors = {1:"Permissão negada. Nenhuma posição foi enviada.",2:"Localização indisponível. Confira o GPS e tente novamente.",3:"O aparelho demorou a obter a posição. Tente novamente."};
