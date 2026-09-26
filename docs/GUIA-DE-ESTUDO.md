@@ -66,10 +66,11 @@ Para estudar limites, comece por [test_api.py](../tests/test_api.py): acesso sem
 | Autenticação e tentativas de login | [settings.py](../config/settings.py), [test_security.py](../tests/test_security.py) | Sessões/tokens e bloqueio de tentativas repetidas |
 | Administração global | [config/admin.py](../config/admin.py), [config/apps.py](../config/apps.py) | Exige superusuário ativo e da equipe, inclusive para contas e tokens |
 | Revogação de links | [models.py](../rastreamento/models.py) | Desativar compartilhamento/dispositivo impede reaproveitar links após reativação |
-| Desativação da conta | [signals.py](../rastreamento/signals.py) | Revoga links pendentes e remove token da API |
+| Desativação da conta | [signals.py](../rastreamento/signals.py) | Revoga links pendentes, remove token da API e avança a versão das sessões |
+| Sessões de navegador | [security.py](../rastreamento/security.py), [test_sessoes.py](../tests/test_sessoes.py) | Compara a versão e encerra sessões anteriores à desativação |
 | Cabeçalhos e cache | [security.py](../rastreamento/security.py) | Restringe permissões do navegador e evita cache de respostas dinâmicas |
 
-As regras acionadas por `save` não se aplicam automaticamente a SQL externo ou `QuerySet.update`. Superusuários têm acesso global. Revogar um token não equivale a encerrar todas as sessões de navegador. Esses limites fazem parte da revisão, não devem ser ocultados por uma contagem de testes aprovados.
+As regras acionadas por `save` não se aplicam automaticamente a SQL externo ou `QuerySet.update`. Superusuários têm acesso global. Tokens e sessões usam controles distintos; a desativação da conta aciona ambos nos fluxos normais. Esses limites fazem parte da revisão, não devem ser ocultados por uma contagem de testes aprovados.
 
 ## 6. Operar sem misturar código e dados
 

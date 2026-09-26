@@ -1,5 +1,21 @@
 from django.conf import settings
+from django.contrib.auth import logout
 from django.utils.cache import add_never_cache_headers
+
+from .models import EstadoSessao
+
+
+class SessionVersionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            version = EstadoSessao.objects.filter(usuario_id=request.user.pk).values_list('versao', flat=True).first()
+            stored = request.session.get('rastreio_auth_version')
+            if version is None or stored != version:
+                logout(request)
+        return self.get_response(request)
 
 
 def direct_client_ip(request):

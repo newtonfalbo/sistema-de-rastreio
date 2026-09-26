@@ -6,6 +6,11 @@ from django.db import models, router, transaction
 from django.utils import timezone
 
 
+class EstadoSessao(models.Model):
+    usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='estado_sessao')
+    versao = models.PositiveBigIntegerField(default=0)
+
+
 class Pessoa(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     responsavel = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pessoas")
