@@ -59,6 +59,8 @@
         new Promise((resolve, reject) => {
           const css = document.createElement("link");
           css.rel = "stylesheet"; css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+          css.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+          css.crossOrigin = "anonymous";
           css.onload = resolve; css.onerror = () => reject(new Error("Não foi possível carregar o estilo do mapa."));
           document.head.append(css);
         }),
