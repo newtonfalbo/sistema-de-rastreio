@@ -70,7 +70,16 @@ class DispositivoSerializer(serializers.ModelSerializer):
         return value
 
 
+class MedidaFloatField(serializers.FloatField):
+    def to_internal_value(self, data):
+        # bool é subtipo de int em Python, mas não representa medida de GPS.
+        if isinstance(data, bool):
+            self.fail('invalid')
+        return super().to_internal_value(data)
+
+
 class LocalizacaoSerializer(serializers.ModelSerializer):
+    precisao_metros = MedidaFloatField(required=False, allow_null=True)
     autorizado = serializers.BooleanField(write_only=True, required=True)
     aviso_versao = serializers.ChoiceField(choices=[AVISO_VERSAO], write_only=True, required=True)
 

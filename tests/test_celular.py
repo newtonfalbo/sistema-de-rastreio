@@ -85,6 +85,25 @@ class LinkCelularTests(TestCase):
         self.assertEqual(self.posicao(latitude='100').status_code, 400)
         self.assertEqual(self.posicao().status_code, 201)
 
+    def test_tipos_invalidos_nao_gravam_nem_consumem_link(self):
+        cases = [
+            ('latitude', {}), ('longitude', []), ('latitude', True),
+            ('latitude', '1e9999'), ('longitude', '\ud800'),
+            ('precisao_metros', True), ('precisao_metros', False),
+            ('precisao_metros', {}), ('precisao_metros', []),
+            ('precisao_metros', 10 ** 400), ('precisao_metros', '1e9999'),
+            ('capturado_em', {}), ('capturado_em', True),
+            ('capturado_em', '9999-12-31T23:59:59-23:00'),
+            ('aviso_versao', {}), ('aviso_versao', []),
+        ]
+        for field, value in cases:
+            with self.subTest(field=field, kind=type(value).__name__):
+                self.assertEqual(self.posicao(**{field: value}).status_code, 400)
+                self.link.refresh_from_db()
+                self.assertIsNone(self.link.utilizado_em)
+                self.assertFalse(Localizacao.objects.exists())
+        self.assertEqual(self.posicao().status_code, 201)
+
     def test_expirado_revogado_e_invalido(self):
         LinkDispositivo.objects.filter(pk=self.link.pk).update(expira_em=timezone.now()-timedelta(seconds=1))
         self.assertEqual(self.posicao().status_code, 410)

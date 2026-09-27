@@ -129,7 +129,7 @@ class RastreioAPITests(APITestCase):
         self.assertEqual(self.registrar(latitude='-90', longitude='-180').status_code, 201)
 
     def test_precisao_invalida(self):
-        for valor in [-1, 'NaN', 'Infinity', '-Infinity']:
+        for valor in [-1, 'NaN', 'Infinity', '-Infinity', True, False, 10 ** 400, {}, []]:
             with self.subTest(valor=valor):
                 self.assertEqual(self.registrar(precisao_metros=valor).status_code, 400)
 
@@ -138,6 +138,13 @@ class RastreioAPITests(APITestCase):
         data = self.payload()
         del data['capturado_em']
         self.assertEqual(self.client.post('/api/localizacoes/', data, format='json').status_code, 400)
+
+    def test_precisao_zero_positiva_ou_desconhecida(self):
+        for value in [0, 0.5, None]:
+            with self.subTest(value=value):
+                response = self.registrar(precisao_metros=value)
+                self.assertEqual(response.status_code, 201)
+                self.assertEqual(response.data['precisao_metros'], value)
 
     def test_json_excessivamente_aninhado_nao_causa_erro_interno(self):
         content = '[' * 20000 + '0' + ']' * 20000
