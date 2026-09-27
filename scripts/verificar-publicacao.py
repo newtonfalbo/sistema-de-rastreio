@@ -47,6 +47,12 @@ def known_private_values(root):
     environment_key = os.environ.get('DJANGO_SECRET_KEY', '')
     if len(environment_key) >= 32:
         values.append(environment_key.encode('utf-8'))
+    environment_origin = os.environ.get('RASTREIO_PUBLIC_ORIGIN', '')
+    if environment_origin:
+        normalized_origin = environment_origin.rstrip('/')
+        if not normalized_origin:
+            raise ValueError('Origem privada inválida.')
+        values.append(normalized_origin.encode('utf-8'))
     database_path = data_root / 'db.sqlite3'
     if database_path.exists():
         with closing(sqlite3.connect(database_path.resolve().as_uri() + '?mode=ro', uri=True)) as database:

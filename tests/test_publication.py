@@ -18,6 +18,24 @@ scanner = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts' / '
 
 
 class PublicationTests(SimpleTestCase):
+    def test_environment_origin_is_blocked_in_blob_and_filename_without_logging(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            origin = 'https://' + secrets.token_hex(12) + '.example.invalid'
+            subprocess.run(['git', 'init', '-q', directory], check=True)
+            (root / 'notes.txt').write_text(origin + '/celular/', encoding='utf-8')
+            subprocess.run(['git', 'add', 'notes.txt'], cwd=directory, check=True)
+            with patch.dict(os.environ, {'RASTREIO_PUBLIC_ORIGIN': origin + '/', 'RASTREIO_DATA_DIR': directory}):
+                findings = scanner['check_index'](directory)
+                values = scanner['known_private_values'](directory)
+            self.assertTrue(findings)
+            self.assertNotIn(origin, str(findings))
+            self.assertNotIn(origin, scanner['safe_path_label'](origin, values))
+            (root / 'notes.txt').write_text('Conteúdo público revisado.', encoding='utf-8')
+            subprocess.run(['git', 'add', 'notes.txt'], cwd=directory, check=True)
+            with patch.dict(os.environ, {'RASTREIO_PUBLIC_ORIGIN': origin + '/', 'RASTREIO_DATA_DIR': directory}):
+                self.assertEqual(scanner['check_index'](directory), [])
+
     def test_known_api_token_is_blocked_without_modifying_database(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
