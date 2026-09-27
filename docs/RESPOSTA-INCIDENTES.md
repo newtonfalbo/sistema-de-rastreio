@@ -29,6 +29,8 @@ A ANPD distingue vulnerabilidade de incidente confirmado e orienta avaliar se h�
 
 Não executar limpeza de retenção, apagar logs ou sobrescrever backups durante a apuração sem decisão registrada. Conter a exposição tem prioridade; preserve as evidências disponíveis sem prolongar um acesso indevido para “observar”.
 
+O formulário de troca de senha da administração também remove o token de API e revoga links móveis pendentes da conta, na mesma transação da alteração. O Django invalida outras sessões pelo hash da senha; a sessão do próprio administrador que troca sua senha pode ser preservada pelo fluxo padrão. Isso não substitui desativar uma conta comprometida durante a investigação. Alterações via shell, `changepassword`, SQL ou outros formulários não passam por essa extensão; exigem revogação explícita. A operação não remove o histórico de posições e não cria automaticamente novo token ou link.
+
 ## 3. Preservar e delimitar
 
 Guardar somente o necessário em armazenamento restrito aprovado, fora do repositório público. Considerar que `.local/` fica fora do Git, mas pode continuar sincronizada pelo OneDrive. Registrar quem coletou, quando e como preservou a cópia; usar hashes dos arquivos para conferir alterações posteriores.
