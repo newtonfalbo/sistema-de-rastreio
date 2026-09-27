@@ -24,7 +24,7 @@
         headers: {"Content-Type": "application/json", "X-CSRFToken": form.querySelector('[name="csrfmiddlewaretoken"]').value},
         body: JSON.stringify({autorizado: true, aviso_versao: document.getElementById("capture-aviso").value, dispositivo: device, latitude: position.coords.latitude.toFixed(7), longitude: position.coords.longitude.toFixed(7), precisao_metros: position.coords.accuracy, capturado_em: new Date(position.timestamp).toISOString()}),
       });
-      if (!response.ok) {
+      if (!response.ok || response.status !== 201) {
         if (response.status === 401 || response.status === 403) throw new Error("Sua sessão expirou ou o envio não foi autorizado. Entre novamente e confira o compartilhamento.");
         if (response.status === 429) throw new Error("Muitos envios. Aguarde um minuto antes de tentar novamente.");
         if (response.status === 400) throw new Error("Envio recusado. Confira se o dispositivo e o compartilhamento continuam ativos.");
