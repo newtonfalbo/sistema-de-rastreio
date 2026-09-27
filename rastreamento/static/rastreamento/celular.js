@@ -10,8 +10,17 @@
   let busy = false;
   async function post(path, data) {
     const response = await fetch(path, {method: "POST", credentials: "same-origin", headers: {"Content-Type": "application/json", "X-CSRFToken": form.querySelector('[name="csrfmiddlewaretoken"]').value}, body: JSON.stringify({token, ...data})});
-    const result = await response.json().catch(() => ({detail: "Não foi possível confirmar o envio. Consulte o responsável antes de tentar novamente."}));
-    if (!response.ok) throw new Error(result.detail || "Envio recusado.");
+    const uncertain = "Não foi possível confirmar a resposta. Consulte o responsável antes de tentar novamente.";
+    let result;
+    try {result = await response.json();} catch (_) {throw new Error(uncertain);}
+    if (!result || typeof result !== "object" || Array.isArray(result)) throw new Error(uncertain);
+    if (!response.ok) throw new Error(typeof result.detail === "string" ? result.detail : "Envio recusado.");
+    const verifying = path === "/celular/verificar/";
+    if (response.status !== (verifying ? 200 : 201)) throw new Error(uncertain);
+    if (verifying) {
+      if (typeof result.pessoa !== "string" || typeof result.dispositivo !== "string" ||
+          typeof result.expira_em !== "string" || !Number.isFinite(Date.parse(result.expira_em))) throw new Error(uncertain);
+    } else if (typeof result.detail !== "string") {throw new Error(uncertain);}
     return result;
   }
   if (!token) {status.textContent = "Abra o link completo enviado pelo responsável ou leia novamente o QR Code.";return;}
