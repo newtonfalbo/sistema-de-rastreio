@@ -68,11 +68,14 @@ Para estudar limites, comece por [test_api.py](../tests/test_api.py): acesso sem
 | Revogação de links | [models.py](../rastreamento/models.py) | Desativar compartilhamento/dispositivo impede reaproveitar links após reativação |
 | Desativação da conta | [signals.py](../rastreamento/signals.py) | Revoga links pendentes, remove token da API e avança a versão das sessões |
 | Sessões de navegador | [security.py](../rastreamento/security.py), [test_sessoes.py](../tests/test_sessoes.py) | Compara a versão e encerra sessões anteriores à desativação |
+| Troca administrativa de senha | [rastreamento/admin.py](../rastreamento/admin.py), [test_admin_password.py](../tests/test_admin_password.py) | Troca a senha e revoga token/links pendentes na mesma transação; outros meios de trocar senha exigem tratamento próprio |
 | Cabeçalhos e cache | [security.py](../rastreamento/security.py) | Restringe permissões do navegador e evita cache de respostas dinâmicas |
 
 As regras acionadas por `save` não se aplicam automaticamente a SQL externo ou `QuerySet.update`. Superusuários têm acesso global. Tokens e sessões usam controles distintos; a desativação da conta aciona ambos nos fluxos normais. Esses limites fazem parte da revisão, não devem ser ocultados por uma contagem de testes aprovados.
 
 ## 6. Operar sem misturar código e dados
+
+Para investigar conexão sem transmitir posição, estude [verificar-conexao-celular.py](../scripts/verificar-conexao-celular.py) e [mobile_origin.py](../config/mobile_origin.py). O primeiro distingue receptor loopback de acesso externo opcional; o segundo centraliza a origem HTTPS usada também pelo painel e receptor. Uma resposta HTTP correta não verifica GPS nem permissões do aparelho.
 
 - [Armazenamento privado](ARMAZENAMENTO-PRIVADO.md): configuração opcional de destino, segredos e verificador antes do commit. Exclusão do Git não desativa OneDrive.
 - [Backup e recuperação](BACKUP-RECUPERACAO.md): inspeção em leitura, ensaio isolado e risco de recuperar acessos antigos.
