@@ -67,6 +67,8 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# Não há campos de anexos: recusar arquivos antes do processamento de upload.
+DATA_UPLOAD_MAX_NUMBER_FILES = 0
 REST_FRAMEWORK = {
     "DEFAULT_PARSER_CLASSES": [
         "rastreamento.parsers.SafeJSONParser",
