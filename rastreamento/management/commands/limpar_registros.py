@@ -1,4 +1,5 @@
 """Limpeza explícita e limitada. Não define uma política de retenção."""
+from datetime import timezone as datetime_timezone
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -24,7 +25,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
             cutoff = parse_datetime(options['antes'])
-        except (TypeError, ValueError):
+            if cutoff is not None and timezone.is_aware(cutoff):
+                cutoff.astimezone(datetime_timezone.utc)
+        except (TypeError, ValueError, OverflowError):
             cutoff = None
         if cutoff is None or timezone.is_naive(cutoff) or cutoff > timezone.now():
             raise CommandError('Informe --antes como data válida com fuso, sem usar uma data futura.')

@@ -1,10 +1,12 @@
 from datetime import timedelta
 from io import StringIO
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
+from django.db.models.query import QuerySet
 from django.utils import timezone
 
 from rastreamento.celular import emitir_link
@@ -69,10 +71,24 @@ class RetencaoTests(TestCase):
         self.assertEqual(Localizacao.objects.count(), 3)
 
     def test_invalid_or_future_cutoff_is_rejected(self):
-        for value in ['invalid', '2026-01-01T12:00:00', (timezone.now() + timedelta(days=1)).isoformat()]:
+        for value in ['invalid', '2026-01-01T12:00:00', '0001-01-01T00:00:00+23:00',
+                      (timezone.now() + timedelta(days=1)).isoformat()]:
             with self.subTest(value=value), self.assertRaises(CommandError):
                 self.run_cleanup(antes=value, confirmar=True, esperados=1)
         self.assertEqual(Localizacao.objects.count(), 3)
+
+    def test_failure_after_delete_rolls_back_entire_batch(self):
+        original_delete = QuerySet.delete
+
+        def fail_after_delete(queryset):
+            original_delete(queryset)
+            raise RuntimeError('Falha fictícia após excluir')
+
+        with patch.object(QuerySet, 'delete', fail_after_delete):
+            with self.assertRaises(RuntimeError):
+                self.run_cleanup(confirmar=True, esperados=1)
+        self.assertEqual(Localizacao.objects.count(), 3)
+        self.assertTrue(Localizacao.objects.filter(pk=self.old.pk).exists())
 
     def test_unknown_owner_does_not_fall_back_to_all(self):
         with self.assertRaises(CommandError):
